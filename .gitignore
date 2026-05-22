@@ -1,0 +1,43 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build
+dist/
+build/
+**/dist/
+**/build/
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env
+.env
+.env.local
+.env.*.local
+*.env
+
+# editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# prisma
+backend/prisma/dev.db
+
+# coverage
+coverage/
+
+# vite
+.vite/

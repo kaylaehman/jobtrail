@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobtrail}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobtrail}
+      POSTGRES_DB: ${POSTGRES_DB:-jobtrail}
+    volumes:
+      - jobtrail_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobtrail} -d ${POSTGRES_DB:-jobtrail}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  jobspy:
+    build:
+      context: ./jobspy-service
+    restart: unless-stopped
+    environment:
+      JOBSPY_CACHE_TTL: ${JOBSPY_CACHE_TTL:-600}
+      JOBSPY_PROXIES: ${JOBSPY_PROXIES:-}
+    # Internal-only: not exposed on the host. The backend reaches it over the compose network.
+    expose:
+      - "8001"
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      jobspy:
+        condition: service_started
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://jobtrail:jobtrail@db:5432/jobtrail?schema=public}
+      JOBSPY_URL: ${JOBSPY_URL:-http://jobspy:8001}
+      PORT: ${BACKEND_PORT:-8000}
+      NODE_ENV: production
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+
+volumes:
+  jobtrail_pgdata:
