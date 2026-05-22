@@ -1,6 +1,7 @@
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosInstance } from 'axios';
 import { JobsService } from '../jobs/jobs.service';
+import { CompaniesService } from '../companies/companies.service';
 import { DiscoverImportDto, DiscoverSearchDto } from './dto/discover.dto';
 
 // Shape returned by the JobSpy sidecar — keep it loose; the sidecar normalizes the DataFrame.
@@ -25,7 +26,10 @@ export class DiscoverService {
   private readonly logger = new Logger(DiscoverService.name);
   private readonly http: AxiosInstance;
 
-  constructor(private readonly jobs: JobsService) {
+  constructor(
+    private readonly jobs: JobsService,
+    private readonly companies: CompaniesService,
+  ) {
     this.http = axios.create({
       baseURL: process.env.JOBSPY_URL ?? 'http://jobspy:8001',
       timeout: 60_000,
@@ -57,12 +61,13 @@ export class DiscoverService {
   }
 
   async import(dto: DiscoverImportDto) {
-    return this.jobs.upsertFromSource({
+    let app = await this.jobs.upsertFromSource({
       source: dto.source,
       sourceJobId: dto.sourceJobId,
       company: dto.company,
       position: dto.position,
       jobUrl: dto.jobUrl,
+      companyUrl: dto.companyUrl,
       location: dto.location,
       salaryMin: dto.salaryMin,
       salaryMax: dto.salaryMax,
@@ -71,5 +76,20 @@ export class DiscoverService {
       description: dto.description,
       status: 'saved',
     });
+
+    // Auto-link the application to its enriched Company row. `confirmed` and `rejected` are
+    // explicit user decisions — never overwrite on re-import. Only `auto` (the default for
+    // new rows and for never-touched existing rows) gets the auto-resolution treatment.
+    if (app.companyMatchStatus === 'auto') {
+      const company = await this.companies.findOrCreateByNameOrDomain(dto.company, dto.companyUrl);
+      if (app.companyId !== company.id) {
+        app = await this.jobs.setCompanyId(app.id, company.id);
+      }
+      // Fire-and-forget enrichment if the company hasn't been enriched recently. The import
+      // response returns immediately — frontend re-fetches Company by id when rendering panels.
+      this.companies.enqueueIfStale(company);
+    }
+
+    return app;
   }
 }

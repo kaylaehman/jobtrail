@@ -62,6 +62,11 @@ export class DiscoverImportDto {
   @IsOptional() @IsString()
   jobUrl?: string;
 
+  // Domain of the company's website, when JobSpy returns one. Strong dedup signal for the
+  // CompaniesService cache lookup — bypasses the normalized-name match when present.
+  @IsOptional() @IsString()
+  companyUrl?: string;
+
   @IsOptional() @IsString()
   location?: string;
 

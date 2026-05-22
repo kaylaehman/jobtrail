@@ -106,6 +106,16 @@ export class JobsService {
     return { deleted: true };
   }
 
+  // Used by DiscoverService.import after CompaniesService resolves a row for the imported
+  // job. Doesn't touch companyMatchStatus — that's the caller's job (auto stays auto).
+  async setCompanyId(id: string, companyId: string | null) {
+    return this.prisma.jobApplication.update({
+      where: { id },
+      data: { companyId },
+      include: JOB_DETAIL_INCLUDE,
+    });
+  }
+
   // Manual disambiguation: the user picked a specific Wikidata entity from the picker UI.
   // Resolves the QID to a Company (creating one if needed), links the application, and
   // marks the match `confirmed` so future imports + the UI know it's been verified.
