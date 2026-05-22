@@ -1,0 +1,93 @@
+# JobTrail — Portainer / homelab stack
+#
+# Designed for a Git-based Portainer stack with Cloudflare Tunnel out front.
+#
+# Differences from the local docker-compose.yml:
+#   - The frontend is built with VITE_API_URL="" so the React bundle uses
+#     relative `/api/...` URLs. The frontend's nginx (see frontend/nginx.conf)
+#     reverse-proxies /api/* to the backend container over the compose network.
+#     => browser only ever sees ONE origin: your Cloudflare hostname.
+#   - The backend has NO host-port mapping. It is only reachable from within
+#     the compose network, via the frontend's /api proxy.
+#   - The frontend host port defaults to 3000 (override with JOBTRAIL_FRONTEND_PORT).
+#     Point your Cloudflare Tunnel "Public Hostname" at:
+#         service: http://<homelab-ip>:${JOBTRAIL_FRONTEND_PORT}
+#     (or, if cloudflared runs in Docker on the same host, you can share an
+#      external network and use http://frontend:80 — see the comments below.)
+#
+# Required Portainer stack environment variables (set in the Portainer UI):
+#   POSTGRES_PASSWORD            strong password for the embedded postgres
+#   JOBSPY_PROXIES               (optional) comma-sep proxy list for python-jobspy
+#   JOBTRAIL_FRONTEND_PORT       (optional, default 3000) host port the tunnel hits
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobtrail}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in the Portainer stack env}
+      POSTGRES_DB: ${POSTGRES_DB:-jobtrail}
+    volumes:
+      - jobtrail_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobtrail} -d ${POSTGRES_DB:-jobtrail}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  jobspy:
+    build:
+      context: ./jobspy-service
+    restart: unless-stopped
+    environment:
+      JOBSPY_CACHE_TTL: ${JOBSPY_CACHE_TTL:-600}
+      JOBSPY_PROXIES: ${JOBSPY_PROXIES:-}
+    expose:
+      - "8001"
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      jobspy:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jobtrail}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-jobtrail}?schema=public
+      JOBSPY_URL: http://jobspy:8001
+      PORT: 8000
+      NODE_ENV: production
+    # No host port mapping — reachable only via the frontend /api proxy.
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Empty => the React bundle uses relative /api/ URLs => frontend nginx proxies to backend.
+        VITE_API_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${JOBTRAIL_FRONTEND_PORT:-3000}:80"
+
+    # ---- Alternative: shared docker network with cloudflared ----
+    # If cloudflared is in its own Docker stack on the same host, you can drop the
+    # `ports:` block above and instead attach the frontend to a shared external
+    # network so cloudflared can reach it as `http://frontend:80` directly.
+    # Replace `ports:` with:
+    #   networks:
+    #     - default
+    #     - cloudflared
+    # …and at the bottom of this file declare:
+    #   networks:
+    #     cloudflared:
+    #       external: true
+
+volumes:
+  jobtrail_pgdata:

@@ -170,6 +170,72 @@ smoke test on `DeadlineBadge`.
 ---
 
 
+## Deploying to a homelab with Portainer + Cloudflare Tunnel
+
+JobTrail ships a second compose file, `docker-compose.portainer.yml`, tuned for
+a Git-based Portainer stack with [cloudflared](https://github.com/cloudflare/cloudflared)
+in front. The browser only sees one origin (your Cloudflare hostname); the
+frontend's nginx reverse-proxies `/api/*` to the backend container over the
+compose network, so there's no CORS, no exposed backend port, and no TLS for
+you to terminate.
+
+### 1. Cloudflare Tunnel — add a Public Hostname
+
+In the Cloudflare Zero Trust dashboard, on the tunnel that runs on your
+homelab:
+
+- **Subdomain / Domain**: e.g. `jobtrail` / `yourdomain.com`
+- **Service type**: `HTTP`
+- **URL**: `<homelab-ip>:3000` (or whatever you set `JOBTRAIL_FRONTEND_PORT` to)
+
+That's the only mapping needed — everything else is internal to the compose
+network.
+
+### 2. Portainer — create the stack
+
+In Portainer: **Stacks → Add stack → Git repository**.
+
+| Field                | Value                                                        |
+| -------------------- | ------------------------------------------------------------ |
+| Name                 | `jobtrail`                                                   |
+| Repository URL       | `https://github.com/kaylaehman/jobtrail`                     |
+| Repository reference | `refs/heads/main`                                            |
+| Compose path         | `docker-compose.portainer.yml`                               |
+| Enable auto-update   | optional — polls the repo and redeploys on commits           |
+
+### 3. Set stack environment variables
+
+In the **Environment variables** section of the stack form:
+
+| Var                       | Required? | Notes                                                       |
+| ------------------------- | --------- | ----------------------------------------------------------- |
+| `POSTGRES_PASSWORD`       | yes       | The compose file errors out if this isn't set.              |
+| `JOBSPY_PROXIES`          | optional  | Comma-sep proxy list for python-jobspy, per LinkedIn caveat. |
+| `JOBTRAIL_FRONTEND_PORT`  | optional  | Default `3000`. Must match the URL in your Cloudflare Tunnel mapping. |
+| `POSTGRES_USER`           | optional  | Default `jobtrail`.                                         |
+| `POSTGRES_DB`             | optional  | Default `jobtrail`.                                         |
+| `JOBSPY_CACHE_TTL`        | optional  | Default `600` seconds.                                      |
+
+Click **Deploy the stack**. The first deploy builds three images on the
+homelab host (5–10 minutes); subsequent redeploys are much faster thanks to
+Docker layer caching.
+
+### 4. Verify
+
+- Visit `https://jobtrail.yourdomain.com` — the dashboard loads, three seeded
+  applications are visible, and the **Discover** tab can hit JobSpy.
+- Portainer's per-container logs should show `prisma migrate deploy` completing
+  and `[jobtrail-backend] listening on :8000`.
+
+### Cloudflared in the same Docker stack (optional)
+
+If cloudflared already runs as a container on this host, you can drop the
+host-port binding and put both stacks on a shared docker network. The bottom of
+`docker-compose.portainer.yml` has a commented block showing how — point the
+tunnel at `http://frontend:80` instead of `http://<homelab-ip>:3000`.
+
+---
+
 ## License
 
 MIT.
