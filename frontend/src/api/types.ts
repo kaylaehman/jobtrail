@@ -25,6 +25,38 @@ export type RoundType =
 
 export type RoundStatus = 'scheduled' | 'completed' | 'passed' | 'rejected' | 'waiting';
 
+export type CompanyMatchStatus = 'auto' | 'confirmed' | 'rejected';
+
+export interface Company {
+  id: string;
+  domain: string | null;
+  name: string;
+  normalizedName: string;
+  logoUrl: string | null;
+  description: string | null;
+  wikipediaUrl: string | null;
+  wikidataQid: string | null;
+  cik: string | null;
+  employees: number | null;
+  employeesAsOf: string | null;
+  // BigInt — serialized as a string at the API boundary, parse to number for display.
+  revenueUsd: string | null;
+  revenueAsOf: string | null;
+  foundedYear: number | null;
+  hqLocation: string | null;
+  industry: string | null;
+  website: string | null;
+  sources: Record<string, string>;
+  lastEnrichedAt: string | null;
+  enrichmentError: string | null;
+}
+
+export interface WikidataCandidate {
+  qid: string;
+  label: string;
+  description: string;
+}
+
 export interface InterviewRound {
   id: string;
   jobApplicationId: string;
@@ -85,6 +117,8 @@ export interface JobApplication {
   rounds: InterviewRound[];
   // Only populated by GET /jobs/:id (detail), not by GET /jobs (list) — guard with ?? [] at usage.
   statusEvents?: JobStatusEvent[];
+  companyId: string | null;
+  companyMatchStatus: CompanyMatchStatus;
 }
 
 export interface ResetSummary {

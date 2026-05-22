@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  Company,
   DiscoverResult,
   ExtractedSkills,
   InterviewRound,
@@ -8,6 +9,7 @@ import type {
   JobStatus,
   ResetSummary,
   UserSettings,
+  WikidataCandidate,
 } from './types';
 
 export interface JobsQuery {
@@ -142,6 +144,51 @@ export function useResetData() {
       (await api.post<{ deleted: ResetSummary }>('/settings/reset', input)).data,
     onSuccess: () => {
       qc.invalidateQueries();
+    },
+  });
+}
+
+// Company panel data — null when the application has no companyId yet (still enriching).
+export function useCompanyByApplication(appId: string | undefined) {
+  return useQuery({
+    queryKey: ['companies', 'by-application', appId],
+    enabled: Boolean(appId),
+    queryFn: async () => (await api.get<Company | null>(`/companies/by-application/${appId}`)).data,
+    // Background enrichment kicks off on import; poll briefly so the panel hydrates without a refresh.
+    refetchInterval: (q) => (q.state.data ? false : 3000),
+  });
+}
+
+export function useRefreshCompany() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => (await api.post<Company>(`/companies/${id}/refresh`)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['companies'] });
+    },
+  });
+}
+
+// Picker search — debounced caller side. Min 2 chars enforced by backend; query disabled below that.
+export function useCompanySearch(query: string) {
+  return useQuery({
+    queryKey: ['companies', 'search', query],
+    enabled: query.trim().length >= 2,
+    queryFn: async () =>
+      (await api.get<WikidataCandidate[]>(`/companies/search`, { params: { q: query.trim() } })).data,
+    staleTime: 60_000,
+  });
+}
+
+// Manual link via Wikidata QID — flips the application's companyMatchStatus to 'confirmed'.
+export function useLinkCompany(jobId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (qid: string) =>
+      (await api.post<JobApplication>(`/jobs/${jobId}/link-company`, { qid })).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jobs', jobId] });
+      qc.invalidateQueries({ queryKey: ['companies', 'by-application', jobId] });
     },
   });
 }

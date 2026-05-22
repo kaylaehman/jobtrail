@@ -12,6 +12,7 @@ import { StatusPill } from '../components/StatusPill';
 import { DeadlineBadge } from '../components/DeadlineBadge';
 import { RoundTimeline } from '../components/RoundTimeline';
 import { StatusTimeline } from '../components/StatusTimeline';
+import { CompanyPanel } from '../components/CompanyPanel';
 import { SkillChips } from '../components/SkillChips';
 import {
   ROUND_STATUS_LABEL,
@@ -108,6 +109,8 @@ export function JobDetail() {
           </div>
         </div>
       </div>
+
+      <CompanyPanel jobId={job.id} matchStatus={job.companyMatchStatus} />
 
       <div className="card p-4 space-y-3">
         <h2 className="text-lg font-semibold">Status history</h2>
