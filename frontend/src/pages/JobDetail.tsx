@@ -13,7 +13,7 @@ import {
 import { StatusPill } from '../components/StatusPill';
 import { DeadlineBadge } from '../components/DeadlineBadge';
 import { RoundTimeline } from '../components/RoundTimeline';
-import { StatusTimeline } from '../components/StatusTimeline';
+import { JobActivityLog } from '../components/JobActivityLog';
 import { CompanyPanel } from '../components/CompanyPanel';
 import { SkillChips } from '../components/SkillChips';
 import {
@@ -108,7 +108,7 @@ export function JobDetail() {
       <CompanyPanel jobId={job.id} matchStatus={job.companyMatchStatus} />
 
       <div className="card p-4 space-y-3">
-        <h2 className="text-lg font-semibold">Notes</h2>
+        <h2 className="text-lg font-semibold">Activity</h2>
         <div className="space-y-2">
           <textarea
             className="input min-h-[5rem]"
@@ -128,35 +128,13 @@ export function JobDetail() {
             {createNote.isPending ? 'Saving…' : '+ Add note'}
           </button>
         </div>
-        {job.notes && job.notes.length > 0 && (
-          <ol className="space-y-2 pt-1">
-            {job.notes.map((n) => (
-              <li
-                key={n.id}
-                className="group border-l-2 border-slate-700 pl-3 py-1 hover:border-brand-sky"
-              >
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <time>{formatDate(n.createdAt)}</time>
-                  <button
-                    type="button"
-                    className="invisible group-hover:visible hover:text-rejected"
-                    onClick={() => {
-                      if (confirm('Delete this note?')) deleteNote.mutate(n.id);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-                <p className="text-sm text-slate-200 whitespace-pre-wrap mt-0.5">{n.body}</p>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
-
-      <div className="card p-4 space-y-3">
-        <h2 className="text-lg font-semibold">Status history</h2>
-        <StatusTimeline events={job.statusEvents ?? []} />
+        <JobActivityLog
+          events={job.statusEvents ?? []}
+          notes={job.notes ?? []}
+          onDeleteNote={(id) => {
+            if (confirm('Delete this note?')) deleteNote.mutate(id);
+          }}
+        />
       </div>
 
       <div className="card p-4 space-y-3">
