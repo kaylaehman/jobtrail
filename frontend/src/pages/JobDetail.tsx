@@ -16,6 +16,7 @@ import { RoundTimeline } from '../components/RoundTimeline';
 import { JobActivityLog } from '../components/JobActivityLog';
 import { CompanyPanel } from '../components/CompanyPanel';
 import { SkillChips } from '../components/SkillChips';
+import { BackButton } from '../components/BackButton';
 import {
   JOB_TYPE_LABEL,
   ROUND_STATUS_LABEL,
@@ -56,6 +57,7 @@ export function JobDetail() {
 
   return (
     <div className="space-y-5">
+      <BackButton fallback="/" />
       <div className="card p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>

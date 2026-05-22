@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useCompany, useJobs, useRefreshCompany } from '../api/hooks';
 import { StatusPill } from '../components/StatusPill';
+import { BackButton } from '../components/BackButton';
 import { useAppSettings } from '../lib/settings-context';
 
 // Standalone /companies/:id view. Mirrors the CompanyPanel layout on JobDetail but adds the
@@ -21,6 +22,7 @@ export function CompanyDetail() {
 
   return (
     <div className="space-y-4">
+      <BackButton fallback="/companies" />
       <div className="card p-4 space-y-3">
         <div className="flex items-start gap-3">
           <CompanyLogo domain={company.domain} name={company.name} />
