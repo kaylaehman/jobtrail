@@ -38,6 +38,15 @@ enum RoundType {
   other
 }
 
+// Mirrors the strings JobSpy uses for its job_type filter so we can pass values through both
+// directions (search → JobSpy, JobSpy → import → JobApplication) without translation.
+enum JobType {
+  fulltime
+  parttime
+  contract
+  internship
+}
+
 enum RoundStatus {
   scheduled
   completed
@@ -75,6 +84,7 @@ model JobApplication {
   updatedAt        DateTime    @updatedAt @map("updated_at")
   tags             String[]    @default([])
   extractedSkills  Json?       @map("extracted_skills")
+  jobType          JobType?    @map("job_type")
   companyId        String?     @map("company_id")
   companyMatchStatus CompanyMatchStatus @default(auto) @map("company_match_status")
 

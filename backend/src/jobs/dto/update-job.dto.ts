@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { CompanyMatchStatus } from '@prisma/client';
+import { CompanyMatchStatus, JobType } from '@prisma/client';
 import { CreateJobDto } from './create-job.dto';
 
 // All fields optional on update — partial type without depending on @nestjs/mapped-types.
@@ -19,6 +19,10 @@ export class UpdateJobDto implements Partial<CreateJobDto> {
   appliedAt?: string;
   deadline?: string;
   tags?: string[];
+
+  @IsOptional()
+  @IsEnum(JobType)
+  jobType?: JobType;
 
   @IsOptional()
   @IsEnum(CompanyMatchStatus)

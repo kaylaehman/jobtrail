@@ -15,6 +15,7 @@ import { StatusTimeline } from '../components/StatusTimeline';
 import { CompanyPanel } from '../components/CompanyPanel';
 import { SkillChips } from '../components/SkillChips';
 import {
+  JOB_TYPE_LABEL,
   ROUND_STATUS_LABEL,
   ROUND_TYPE_LABEL,
   STATUS_LABEL,
@@ -64,6 +65,7 @@ export function JobDetail() {
             </div>
             <div className="text-sm text-slate-400 mt-1">
               <StatusPill status={job.status} />{' '}
+              {job.jobType && <span className="ml-2">🕒 {JOB_TYPE_LABEL[job.jobType]}</span>}
               {job.location && <span className="ml-2">📍 {job.location}</span>}
               {job.remote && <span className="ml-2">🌐 Remote</span>}
               {job.jobUrl && (

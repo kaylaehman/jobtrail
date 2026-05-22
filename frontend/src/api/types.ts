@@ -15,6 +15,9 @@ export type JobStatus =
   | 'rejected'
   | 'withdrawn';
 
+// Mirrors the JobSpy + Prisma JobType enum. null = unspecified (manual entries default here).
+export type JobType = 'fulltime' | 'parttime' | 'contract' | 'internship';
+
 export type RoundType =
   | 'online_assessment'
   | 'hr_screen'
@@ -110,6 +113,7 @@ export interface JobApplication {
   salaryCurrency: string | null;
   remote: boolean;
   description: string | null;
+  jobType: JobType | null;
   status: JobStatus;
   appliedAt: string | null;
   deadline: string | null;

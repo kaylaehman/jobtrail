@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useDiscoverImport, useDiscoverSearch } from '../api/hooks';
-import { formatSalaryRange } from '../lib/format';
+import { formatSalaryRange, isJobType } from '../lib/format';
 import type { DiscoverResult } from '../api/types';
 
 const SITES = ['linkedin', 'indeed', 'glassdoor', 'google', 'ziprecruiter'] as const;
@@ -79,6 +79,10 @@ export function Discover() {
       salaryCurrency: r.currency ?? undefined,
       remote: r.is_remote ?? undefined,
       description: r.description ?? undefined,
+      // JobSpy returns job_type as a string (sometimes hyphenated, sometimes null). Only forward
+      // when it matches our enum exactly — anything else gets stored as null and the user can
+      // edit it via JobForm if they care.
+      jobType: isJobType(r.job_type) ? r.job_type : undefined,
     });
     setImportedIds((prev) => new Set(prev).add(r.id));
   };

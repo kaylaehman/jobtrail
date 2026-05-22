@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { useJobs } from '../api/hooks';
 import { StatusPill } from '../components/StatusPill';
 import { DeadlineBadge } from '../components/DeadlineBadge';
-import { STATUS_LABEL } from '../lib/format';
+import { JOB_TYPE_LABEL, STATUS_LABEL } from '../lib/format';
 import { useAppSettings } from '../lib/settings-context';
-import type { JobApplication, JobStatus } from '../api/types';
+import type { JobApplication, JobStatus, JobType } from '../api/types';
 
 const STATUS_OPTIONS: Array<JobStatus | ''> = [
   '',
@@ -90,6 +90,7 @@ export function Dashboard() {
   const [status, setStatus] = useState<JobStatus | ''>('');
   const [tag, setTag] = useState('');
   const [industry, setIndustry] = useState('');
+  const [jobType, setJobType] = useState<JobType | ''>('');
   const [sortBy, setSortBy] = useState<SortKey>('applied');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const { formatDate } = useAppSettings();
@@ -99,6 +100,7 @@ export function Dashboard() {
     status: status || undefined,
     tag: tag || undefined,
     industry: industry || undefined,
+    jobType: jobType || undefined,
   });
 
   const sorted = useMemo(() => {
@@ -154,11 +156,21 @@ export function Dashboard() {
         />
         <input
           className="input max-w-xs"
-          placeholder="Industry filter (e.g. petroleum)"
+          placeholder="Industry (comma-sep for multi)"
           value={industry}
           onChange={(e) => setIndustry(e.target.value)}
-          title="Filters by the enriched Company.industry — only works for apps with an enriched company"
+          title="Comma-separated industries (OR-matched). Only matches apps whose linked Company has an industry set."
         />
+        <select
+          className="input max-w-xs"
+          value={jobType}
+          onChange={(e) => setJobType(e.target.value as JobType | '')}
+        >
+          <option value="">All job types</option>
+          {(Object.keys(JOB_TYPE_LABEL) as JobType[]).map((t) => (
+            <option key={t} value={t}>{JOB_TYPE_LABEL[t]}</option>
+          ))}
+        </select>
       </div>
 
       {isLoading && <div className="text-slate-400">Loading…</div>}

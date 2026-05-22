@@ -10,7 +10,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { JobSource } from '@prisma/client';
+import { JobSource, JobType } from '@prisma/client';
 
 // Sites JobSpy supports for search. `manual` is excluded — it's only valid for tracker entries.
 export const DISCOVER_SITES = [
@@ -84,4 +84,7 @@ export class DiscoverImportDto {
 
   @IsOptional() @IsString()
   description?: string;
+
+  @IsOptional() @IsEnum(JobType)
+  jobType?: JobType;
 }

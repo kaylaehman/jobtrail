@@ -1,5 +1,5 @@
 import { IsEnum, IsISO8601, IsOptional, IsString } from 'class-validator';
-import { JobStatus } from '@prisma/client';
+import { JobStatus, JobType } from '@prisma/client';
 
 // Query params for the dashboard search/filter (FR-6).
 export class QueryJobDto {
@@ -13,10 +13,13 @@ export class QueryJobDto {
   @IsOptional() @IsString()
   companyId?: string;
 
-  // Filter by linked Company.industry (substring, case-insensitive). Useful for sifting
-  // "show me everything in petroleum" or "show me consulting roles" after enrichment lands.
+  // Filter by linked Company.industry. Comma-separated → OR'd together (substring, case-insensitive).
+  // "petroleum, consulting" returns apps at either petroleum-OR consulting-industry companies.
   @IsOptional() @IsString()
   industry?: string;
+
+  @IsOptional() @IsEnum(JobType)
+  jobType?: JobType;
 
   @IsOptional() @IsEnum(JobStatus)
   status?: JobStatus;

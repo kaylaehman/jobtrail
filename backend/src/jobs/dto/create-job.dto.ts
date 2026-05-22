@@ -9,7 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { JobSource, JobStatus } from '@prisma/client';
+import { JobSource, JobStatus, JobType } from '@prisma/client';
 
 export class CreateJobDto {
   @IsString() @MinLength(1) @MaxLength(200)
@@ -44,6 +44,9 @@ export class CreateJobDto {
 
   @IsOptional() @IsString()
   description?: string;
+
+  @IsOptional() @IsEnum(JobType)
+  jobType?: JobType;
 
   @IsOptional() @IsEnum(JobStatus)
   status?: JobStatus;

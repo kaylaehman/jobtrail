@@ -8,6 +8,7 @@ import type {
   InterviewRound,
   JobApplication,
   JobStatus,
+  JobType,
   ResetSummary,
   UserSettings,
   WikidataCandidate,
@@ -19,6 +20,7 @@ export interface JobsQuery {
   company?: string;
   companyId?: string;
   industry?: string;
+  jobType?: JobType;
   tag?: string;
 }
 
@@ -234,6 +236,7 @@ export function useDiscoverImport() {
       salaryCurrency?: string;
       remote?: boolean;
       description?: string;
+      jobType?: JobType;
     }) => (await api.post<JobApplication>('/discover/import', input)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['jobs'] }),
   });

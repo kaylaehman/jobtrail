@@ -8,9 +8,9 @@ import {
 } from '../api/hooks';
 import { SkillChips } from '../components/SkillChips';
 import { TagInput } from '../components/TagInput';
-import { STATUS_LABEL } from '../lib/format';
+import { JOB_TYPE_LABEL, STATUS_LABEL } from '../lib/format';
 import { useAppSettings } from '../lib/settings-context';
-import type { ExtractedSkills, JobApplication, JobStatus } from '../api/types';
+import type { ExtractedSkills, JobApplication, JobStatus, JobType } from '../api/types';
 
 type FormState = Partial<JobApplication>;
 
@@ -123,6 +123,21 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
             value={form.jobUrl ?? ''}
             onChange={(e) => setForm({ ...form, jobUrl: e.target.value })}
           />
+        </label>
+        <label className="text-sm">
+          Job type
+          <select
+            className="input mt-1"
+            value={form.jobType ?? ''}
+            onChange={(e) =>
+              setForm({ ...form, jobType: (e.target.value || null) as JobType | null })
+            }
+          >
+            <option value="">— unspecified —</option>
+            {(Object.keys(JOB_TYPE_LABEL) as JobType[]).map((t) => (
+              <option key={t} value={t}>{JOB_TYPE_LABEL[t]}</option>
+            ))}
+          </select>
         </label>
         <label className="text-sm">
           Salary min

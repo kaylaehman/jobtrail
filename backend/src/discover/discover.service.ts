@@ -73,6 +73,7 @@ export class DiscoverService {
       salaryCurrency: dto.salaryCurrency,
       remote: dto.remote,
       description: dto.description,
+      jobType: dto.jobType,
       status: 'saved',
     });
 
