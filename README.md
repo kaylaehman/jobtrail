@@ -22,6 +22,7 @@ calls — enrichment uses public keyless APIs only.
 ## Features by page
 
 ### Dashboard — `/`
+<img width="2546" height="1307" alt="image" src="https://github.com/user-attachments/assets/de6e89b8-c7e1-4853-92c2-66058a48e615" />
 
 The home page. Sortable table of every tracked application.
 
@@ -36,6 +37,7 @@ The home page. Sortable table of every tracked application.
 - **"+ Add Job"** button routes to the create form.
 
 ### Discover — `/discover`
+<img width="2506" height="1303" alt="image" src="https://github.com/user-attachments/assets/9a00a89e-d229-47fb-b875-54e6e5aa1982" />
 
 JobSpy-backed search across LinkedIn / Indeed / Glassdoor / Google / ZipRecruiter. Identical queries are cached for 10 minutes in the sidecar to avoid rate-limit pain.
 
@@ -50,6 +52,7 @@ JobSpy-backed search across LinkedIn / Indeed / Glassdoor / Google / ZipRecruite
 - **Import button** per row — POSTs to `/api/discover/import` which upserts on `(source, sourceJobId)`, auto-resolves a Company row, and kicks off background enrichment. Re-importing the same row refreshes URL/salary/location/description but never overwrites your status or notes.
 
 ### Companies — `/companies`
+<img width="2549" height="1305" alt="image" src="https://github.com/user-attachments/assets/821b2813-4b3d-4deb-8e61-2c1cf34ed212" />
 
 Card grid of every Company row your imports have created or you've manually linked. Useful for spotting "I've applied to 4 different oil-and-gas firms" patterns.
 
@@ -58,6 +61,7 @@ Card grid of every Company row your imports have created or you've manually link
 - Click a card → `/companies/:id`
 
 ### Company Detail — `/companies/:id`
+<img width="2551" height="1309" alt="image" src="https://github.com/user-attachments/assets/253d88fc-ee26-42b8-9d5d-32dd6d7bd458" />
 
 Full enriched profile for one company.
 
@@ -79,6 +83,7 @@ Global feed of everything that's happened to your tracker, newest first. Capped 
 - Each row includes a link back to the source application.
 
 ### Job Detail — `/jobs/:id`
+<img width="2521" height="1310" alt="image" src="https://github.com/user-attachments/assets/1c7626f7-b3b6-44a4-a4bd-65f60b10275c" />
 
 Full picture of a single application. Roughly in order down the page:
 
@@ -104,6 +109,7 @@ Full picture of a single application. Roughly in order down the page:
 - **Description** — collapsible `<details>` block with the full job posting
 
 ### Add Job / Edit Job — `/jobs/new` and `/jobs/:id/edit`
+<img width="2511" height="1212" alt="image" src="https://github.com/user-attachments/assets/29efd464-1052-482e-843a-6a04d136dbe3" />
 
 Single form, used for both creation and editing.
 
@@ -118,6 +124,7 @@ Single form, used for both creation and editing.
 - Description — pasting in a job posting triggers skill extraction on save
 
 ### Settings — `/settings`
+<img width="2514" height="1305" alt="image" src="https://github.com/user-attachments/assets/0359a83e-532c-4948-87d0-0ab19f73c7c6" />
 
 Per-user preferences and destructive actions.
 
