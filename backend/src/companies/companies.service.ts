@@ -4,6 +4,7 @@ import { JaroWinklerDistance } from 'natural';
 import { PrismaService } from '../prisma/prisma.service';
 import { EnrichmentService } from './enrichment/enrichment.service';
 import { WikidataCandidate, WikidataClient } from './enrichment/wikidata-client';
+import { normalizeName } from './name-normalizer';
 
 const STALE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 // Jaro-Winkler similarity threshold for the fuzzy-match fallback. 0.92 keeps "Chevron Corporation"
@@ -11,9 +12,6 @@ const STALE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 const FUZZY_MATCH_THRESHOLD = 0.92;
 // JW is unreliable on very short strings — "HP" vs "HQ" scores too high. Require ≥4 chars.
 const FUZZY_MIN_LENGTH = 4;
-// Suffixes stripped from normalizedName. See conversation history for trade-off analysis.
-const COMPANY_SUFFIXES =
-  /\b(incorporated|corporation|company|limited|inc|llc|ltd|corp|co|gmbh|sa|sas|ag|plc|pty|kk|nv|bv|lp)\b/g;
 
 @Injectable()
 export class CompaniesService {
@@ -49,7 +47,7 @@ export class CompaniesService {
       const byDomain = await this.prisma.company.findUnique({ where: { domain: cleanDomain } });
       if (byDomain) return byDomain;
     }
-    const normalizedName = this.normalizeName(name);
+    const normalizedName = normalizeName(name);
     const byName = await this.prisma.company.findUnique({ where: { normalizedName } });
     if (byName) {
       // Backfill domain on the existing row if we learned it on this import.
@@ -132,7 +130,7 @@ export class CompaniesService {
     if (!entity || !entity.label) {
       throw new BadRequestException(`Wikidata entity ${qid} not found or has no English label`);
     }
-    const normalizedName = this.normalizeName(entity.label);
+    const normalizedName = normalizeName(entity.label);
     const byName = await this.prisma.company.findUnique({ where: { normalizedName } });
     if (byName) {
       return this.prisma.company.update({
@@ -145,15 +143,5 @@ export class CompaniesService {
     });
   }
 
-  // Standard suffix stripping — see COMPANY_SUFFIXES at top of file. Strips punctuation
-  // (preserving & for "AT&T") then collapses whitespace. Idempotent.
-  private normalizeName(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\s&]/gu, ' ')
-      .replace(COMPANY_SUFFIXES, ' ')
-      .replace(/\s+&\s+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
+
 }

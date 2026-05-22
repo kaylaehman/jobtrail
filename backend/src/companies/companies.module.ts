@@ -6,6 +6,8 @@ import { EnrichmentHttp } from './enrichment/enrichment-http';
 import { WikipediaSource } from './enrichment/wikipedia.source';
 import { WikidataSource } from './enrichment/wikidata.source';
 import { WikidataClient } from './enrichment/wikidata-client';
+import { EdgarSource } from './enrichment/edgar.source';
+import { EdgarTickerCache } from './enrichment/edgar-ticker-cache';
 import { ENRICHMENT_SOURCES } from './enrichment/source.interface';
 
 @Module({
@@ -15,17 +17,20 @@ import { ENRICHMENT_SOURCES } from './enrichment/source.interface';
     EnrichmentService,
     EnrichmentHttp,
     WikidataClient,
+    EdgarTickerCache,
     WikipediaSource,
     WikidataSource,
+    EdgarSource,
     // Multi-provider: declaration order here = run order in EnrichmentService.enrich.
-    // Wikipedia first (cheapest, often supplies the QID Wikidata then reuses), Wikidata second.
-    // EDGAR will be appended in step 4.
+    // Wikipedia first (cheapest, often supplies the QID Wikidata reuses), Wikidata second
+    // (structured pan-international data), EDGAR last (authoritative on revenue/employees
+    // for US public companies; merge logic decides whether it overrides earlier values).
     {
       provide: ENRICHMENT_SOURCES,
-      useFactory: (wp: WikipediaSource, wd: WikidataSource) => [wp, wd],
-      inject: [WikipediaSource, WikidataSource],
+      useFactory: (wp: WikipediaSource, wd: WikidataSource, ed: EdgarSource) => [wp, wd, ed],
+      inject: [WikipediaSource, WikidataSource, EdgarSource],
     },
   ],
-  exports: [CompaniesService],
+  exports: [CompaniesService, EdgarTickerCache],
 })
 export class CompaniesModule {}
