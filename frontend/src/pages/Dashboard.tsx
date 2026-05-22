@@ -89,6 +89,7 @@ export function Dashboard() {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<JobStatus | ''>('');
   const [tag, setTag] = useState('');
+  const [industry, setIndustry] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('applied');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const { formatDate } = useAppSettings();
@@ -97,6 +98,7 @@ export function Dashboard() {
     q: q || undefined,
     status: status || undefined,
     tag: tag || undefined,
+    industry: industry || undefined,
   });
 
   const sorted = useMemo(() => {
@@ -149,6 +151,13 @@ export function Dashboard() {
           placeholder="Tag filter (e.g. react)"
           value={tag}
           onChange={(e) => setTag(e.target.value)}
+        />
+        <input
+          className="input max-w-xs"
+          placeholder="Industry filter (e.g. petroleum)"
+          value={industry}
+          onChange={(e) => setIndustry(e.target.value)}
+          title="Filters by the enriched Company.industry — only works for apps with an enriched company"
         />
       </div>
 

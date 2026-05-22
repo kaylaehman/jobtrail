@@ -1,9 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDiscoverImport, useDiscoverSearch } from '../api/hooks';
 import { formatSalaryRange } from '../lib/format';
 import type { DiscoverResult } from '../api/types';
 
 const SITES = ['linkedin', 'indeed', 'glassdoor', 'google', 'ziprecruiter'] as const;
+
+// JobSpy uses these strings literally for `job_type`. Map empty → undefined to omit the param.
+const JOB_TYPES = [
+  { value: '', label: 'Any' },
+  { value: 'fulltime', label: 'Full-time' },
+  { value: 'parttime', label: 'Part-time' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'internship', label: 'Internship' },
+] as const;
 
 export function Discover() {
   const [sites, setSites] = useState<string[]>(['linkedin', 'indeed']);
@@ -12,6 +21,11 @@ export function Discover() {
   const [resultsWanted, setResultsWanted] = useState(25);
   const [hoursOld, setHoursOld] = useState<number | ''>(72);
   const [isRemote, setIsRemote] = useState(true);
+  const [jobType, setJobType] = useState<string>('');
+  // Client-side noise filtering — applied to the returned list, doesn't change the upstream
+  // search. Cheap way to suppress "Cloud Architect" when you searched "Junior Architect".
+  const [includeKeywords, setIncludeKeywords] = useState('');
+  const [excludeKeywords, setExcludeKeywords] = useState('');
 
   const search = useDiscoverSearch();
   const importJob = useDiscoverImport();
@@ -28,8 +42,28 @@ export function Discover() {
       resultsWanted,
       hoursOld: hoursOld === '' ? undefined : hoursOld,
       isRemote,
+      jobType: jobType || undefined,
     });
   };
+
+  // Filter results client-side. Matches title + company + description (lowercased) against
+  // comma-separated keyword lists. Excludes win — if any exclude term hits, the row is hidden
+  // even when it also matches an include term. Empty filters are pass-throughs.
+  const filteredResults = useMemo(() => {
+    if (!search.data?.results) return [];
+    const includes = includeKeywords
+      .toLowerCase().split(',').map((s) => s.trim()).filter(Boolean);
+    const excludes = excludeKeywords
+      .toLowerCase().split(',').map((s) => s.trim()).filter(Boolean);
+    if (includes.length === 0 && excludes.length === 0) return search.data.results;
+    return search.data.results.filter((r) => {
+      const haystack = `${r.title ?? ''} ${r.company ?? ''} ${r.description ?? ''}`.toLowerCase();
+      if (excludes.some((kw) => haystack.includes(kw))) return false;
+      if (includes.length > 0 && !includes.some((kw) => haystack.includes(kw))) return false;
+      return true;
+    });
+  }, [search.data, includeKeywords, excludeKeywords]);
+  const hiddenCount = (search.data?.results.length ?? 0) - filteredResults.length;
 
   const handleImport = async (r: DiscoverResult) => {
     if (!r.company || !r.title) return;
@@ -112,6 +146,38 @@ export function Discover() {
               onChange={(e) => setHoursOld(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
             />
           </label>
+          <label className="text-xs font-medium text-slate-300">
+            Job type
+            <select
+              className="input mt-1"
+              value={jobType}
+              onChange={(e) => setJobType(e.target.value)}
+            >
+              {JOB_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label className="text-xs font-medium text-slate-300">
+            Include keywords <span className="text-slate-500 font-normal">(comma-sep, any match keeps it)</span>
+            <input
+              className="input mt-1"
+              placeholder="e.g. design, building, architecture"
+              value={includeKeywords}
+              onChange={(e) => setIncludeKeywords(e.target.value)}
+            />
+          </label>
+          <label className="text-xs font-medium text-slate-300">
+            Exclude keywords <span className="text-slate-500 font-normal">(comma-sep, any match hides it)</span>
+            <input
+              className="input mt-1"
+              placeholder="e.g. cloud, aws, software, devops"
+              value={excludeKeywords}
+              onChange={(e) => setExcludeKeywords(e.target.value)}
+            />
+          </label>
         </div>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-1 text-sm">
@@ -122,7 +188,9 @@ export function Discover() {
           </button>
           {search.data && (
             <span className="text-xs text-slate-400">
-              {search.data.count} result{search.data.count === 1 ? '' : 's'}
+              {hiddenCount > 0
+                ? `Showing ${filteredResults.length} of ${search.data.count} (${hiddenCount} hidden by filter)`
+                : `${search.data.count} result${search.data.count === 1 ? '' : 's'}`}
               {search.data.cached ? ' · cached' : ''}
             </span>
           )}
@@ -135,7 +203,14 @@ export function Discover() {
         </div>
       )}
 
-      {search.data && search.data.results.length > 0 && (
+      {search.data && search.data.results.length > 0 && filteredResults.length === 0 && (
+        <div className="card p-4 text-sm text-slate-400">
+          All {search.data.count} result{search.data.count === 1 ? '' : 's'} were hidden by the include/exclude filter.
+          Loosen the keywords above.
+        </div>
+      )}
+
+      {filteredResults.length > 0 && (
         <div className="card overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-900 text-left text-slate-300">
@@ -149,7 +224,7 @@ export function Discover() {
               </tr>
             </thead>
             <tbody>
-              {search.data.results.map((r) => {
+              {filteredResults.map((r) => {
                 const imported = importedIds.has(r.id);
                 return (
                   <tr key={`${r.site}-${r.id}`} className="border-t border-slate-700 hover:bg-slate-900/50">

@@ -13,6 +13,11 @@ export class QueryJobDto {
   @IsOptional() @IsString()
   companyId?: string;
 
+  // Filter by linked Company.industry (substring, case-insensitive). Useful for sifting
+  // "show me everything in petroleum" or "show me consulting roles" after enrichment lands.
+  @IsOptional() @IsString()
+  industry?: string;
+
   @IsOptional() @IsEnum(JobStatus)
   status?: JobStatus;
 

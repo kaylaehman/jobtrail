@@ -18,6 +18,7 @@ export interface JobsQuery {
   status?: JobStatus;
   company?: string;
   companyId?: string;
+  industry?: string;
   tag?: string;
 }
 
@@ -106,6 +107,7 @@ export interface DiscoverSearchInput {
   resultsWanted?: number;
   hoursOld?: number;
   isRemote?: boolean;
+  jobType?: string;
 }
 
 export function useDiscoverSearch() {

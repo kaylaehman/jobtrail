@@ -27,6 +27,11 @@ export class JobsService {
     if (q.status) where.status = q.status;
     if (q.company) where.company = { contains: q.company, mode: 'insensitive' };
     if (q.companyId) where.companyId = q.companyId;
+    if (q.industry) {
+      where.companyEntity = {
+        is: { industry: { contains: q.industry, mode: 'insensitive' } },
+      };
+    }
     if (q.tag) where.tags = { has: q.tag };
     if (q.q) {
       where.OR = [
