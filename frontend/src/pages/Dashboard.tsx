@@ -192,18 +192,6 @@ export function Dashboard() {
                       ) : (
                         <span className="font-medium">{j.company}</span>
                       )}
-                      {j.companyUrl && (
-                        <a
-                          href={j.companyUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={`${j.company} website`}
-                          title={j.companyUrl}
-                          className="ml-1 text-xs text-applied hover:underline"
-                        >
-                          ↗
-                        </a>
-                      )}
                       <DeadlineBadge deadline={j.deadline} />
                     </td>
                     <td className="px-3 py-2">

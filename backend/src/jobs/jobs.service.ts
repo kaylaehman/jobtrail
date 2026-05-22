@@ -66,7 +66,9 @@ export class JobsService {
     // apps stayed companyId=null forever, so the Dashboard table never linked their
     // company name and JobDetail's CompanyPanel never rendered anything for them.
     if (dto.company) {
-      const company = await this.companies.findOrCreateByNameOrDomain(dto.company, dto.companyUrl);
+      // Manual create doesn't carry a domain hint — resolution falls back to normalized-name dedup.
+      // The discover flow still passes companyUrl through DiscoverImportDto for the JobSpy path.
+      const company = await this.companies.findOrCreateByNameOrDomain(dto.company);
       data.companyId = company.id;
       this.companies.enqueueIfStale(company);
     }

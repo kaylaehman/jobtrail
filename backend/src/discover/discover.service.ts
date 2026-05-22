@@ -67,7 +67,6 @@ export class DiscoverService {
       company: dto.company,
       position: dto.position,
       jobUrl: dto.jobUrl,
-      companyUrl: dto.companyUrl,
       location: dto.location,
       salaryMin: dto.salaryMin,
       salaryMax: dto.salaryMax,

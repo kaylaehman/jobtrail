@@ -125,15 +125,6 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
           />
         </label>
         <label className="text-sm">
-          Company website
-          <input
-            className="input mt-1"
-            placeholder="https://company.com"
-            value={form.companyUrl ?? ''}
-            onChange={(e) => setForm({ ...form, companyUrl: e.target.value })}
-          />
-        </label>
-        <label className="text-sm">
           Salary min
           <input
             className="input mt-1"

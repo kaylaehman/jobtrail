@@ -9,7 +9,6 @@ export class UpdateJobDto implements Partial<CreateJobDto> {
   source?: CreateJobDto['source'];
   sourceJobId?: string;
   jobUrl?: string;
-  companyUrl?: string;
   location?: string;
   salaryMin?: number;
   salaryMax?: number;

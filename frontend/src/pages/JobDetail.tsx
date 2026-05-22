@@ -58,19 +58,7 @@ export function JobDetail() {
               {nextScheduled?.scheduledAt && ` | Next: ${formatDate(nextScheduled.scheduledAt)}`}
             </div>
             <div className="text-xl font-bold mt-1">
-              {job.companyUrl ? (
-                <a
-                  href={job.companyUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:underline"
-                  title={job.companyUrl}
-                >
-                  {job.company} ↗
-                </a>
-              ) : (
-                job.company
-              )}{' '}
+              {job.company}{' '}
               <span className="text-slate-500">|</span> {job.position}
               <DeadlineBadge deadline={job.deadline} />
             </div>

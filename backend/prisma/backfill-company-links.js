@@ -23,7 +23,7 @@ async function main() {
   const apps = await prisma.jobApplication.findMany({
     // 'rejected' = user explicitly said "wrong company" — never auto-link.
     where: { companyId: null, companyMatchStatus: { not: 'rejected' } },
-    select: { id: true, company: true, companyUrl: true },
+    select: { id: true, company: true },
   });
 
   if (apps.length === 0) {
@@ -41,39 +41,23 @@ async function main() {
   let createdCompanies = 0;
 
   for (const app of apps) {
-    const cleanDomain = app.companyUrl
-      ? app.companyUrl.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') || null
-      : null;
     const normalized = normalizeName(app.company || '');
     if (!normalized) {
       console.log(`  skip ${app.id}: empty normalized name from "${app.company}"`);
       continue;
     }
 
-    const cacheKey = cleanDomain ?? `name:${normalized}`;
-    let company = cache.get(cacheKey);
+    let company = cache.get(normalized);
 
     if (!company) {
-      if (cleanDomain) {
-        company = await prisma.company.findUnique({ where: { domain: cleanDomain } });
-      }
-      if (!company) {
-        company = await prisma.company.findUnique({ where: { normalizedName: normalized } });
-        // Backfill domain on an existing name-matched row if the import learned one.
-        if (company && cleanDomain && !company.domain) {
-          company = await prisma.company.update({
-            where: { id: company.id },
-            data: { domain: cleanDomain },
-          });
-        }
-      }
+      company = await prisma.company.findUnique({ where: { normalizedName: normalized } });
       if (!company) {
         company = await prisma.company.create({
-          data: { name: app.company, normalizedName: normalized, domain: cleanDomain },
+          data: { name: app.company, normalizedName: normalized },
         });
         createdCompanies += 1;
       }
-      cache.set(cacheKey, company);
+      cache.set(normalized, company);
     }
 
     await prisma.jobApplication.update({
