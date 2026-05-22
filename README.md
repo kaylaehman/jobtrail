@@ -1,5 +1,7 @@
 # JobTrail
 
+![JobTrail — Track. Discover. Land.](./jobtrail-banner.png)
+
 A self-hosted job-application tracker with a JobSpy-powered discovery pipeline.
 
 JobTrail implements **Phase 1 of the [AI Job Application Tracker spec](docs/REQUIREMENTS.md)** —
