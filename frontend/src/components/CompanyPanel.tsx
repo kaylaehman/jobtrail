@@ -34,7 +34,7 @@ export function CompanyPanel({
           <button
             type="button"
             className="text-xs text-slate-400 underline hover:text-slate-200"
-            onClick={() => updateJob.mutate({ companyMatchStatus: 'auto' } as never)}
+            onClick={() => updateJob.mutate({ companyMatchStatus: 'auto' })}
           >
             ↩ Restore auto-match
           </button>
@@ -136,7 +136,6 @@ function CompanyFacts({ company }: { company: Company }) {
     company.foundedYear ? `Founded ${company.foundedYear}` : null,
     company.employees ? `${company.employees.toLocaleString()} employees` : null,
     formatRevenue(company.revenueUsd, company.revenueAsOf),
-    company.website ? null : null, // website rendered as a separate link below
   ].filter(Boolean);
   if (facts.length === 0 && !company.website) return null;
   return (
@@ -169,7 +168,6 @@ function CompanyFooter({
 }) {
   const { formatDate } = useAppSettings();
   const updateJob = useUpdateJob(jobId);
-  const sources = Object.keys(company.sources ?? {}).filter((k) => company.sources[k]);
   const distinctSources = Array.from(new Set(Object.values(company.sources ?? {})));
   return (
     <div className="border-t border-slate-700 pt-2 space-y-2">
@@ -202,21 +200,19 @@ function CompanyFooter({
           <button
             type="button"
             className="btn !py-0.5 !px-2 text-xs"
-            onClick={() => updateJob.mutate({ companyMatchStatus: 'confirmed' } as never)}
+            onClick={() => updateJob.mutate({ companyMatchStatus: 'confirmed' })}
           >
             ✓ Yes
           </button>
           <button
             type="button"
             className="btn !py-0.5 !px-2 text-xs"
-            onClick={() => updateJob.mutate({ companyMatchStatus: 'rejected' } as never)}
+            onClick={() => updateJob.mutate({ companyMatchStatus: 'rejected' })}
           >
             ✗ Wrong
           </button>
         </div>
       )}
-      {/* Suppress the unused-warning for `sources` array; intentionally not displayed in v1. */}
-      {sources.length === 0 && null}
     </div>
   );
 }
