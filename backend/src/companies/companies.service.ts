@@ -1,8 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Company } from '@prisma/client';
 import { JaroWinklerDistance } from 'natural';
 import { PrismaService } from '../prisma/prisma.service';
 import { EnrichmentService } from './enrichment/enrichment.service';
+import { WikidataCandidate, WikidataClient } from './enrichment/wikidata-client';
 
 const STALE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 // Jaro-Winkler similarity threshold for the fuzzy-match fallback. 0.92 keeps "Chevron Corporation"
@@ -21,6 +22,7 @@ export class CompaniesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly enrichment: EnrichmentService,
+    private readonly wikidata: WikidataClient,
   ) {}
 
   async findOne(id: string): Promise<Company> {
@@ -110,6 +112,37 @@ export class CompaniesService {
   async refresh(id: string): Promise<Company> {
     const company = await this.findOne(id);
     return this.enrichment.enrich(company);
+  }
+
+  // Used by the disambiguation picker UI. Min 2 chars — shorter queries waste an upstream call
+  // and return mostly garbage anyway.
+  async searchWikidata(query: string): Promise<WikidataCandidate[]> {
+    if (!query || query.trim().length < 2) return [];
+    return this.wikidata.search(query.trim());
+  }
+
+  // Resolves a Wikidata QID to a Company row. If a row already references this QID, return it.
+  // If a row with the same normalized name exists (e.g., auto-import already created a stub),
+  // backfill the QID rather than duplicating. Otherwise create fresh seeded with the QID's label.
+  async findOrCreateByQid(qid: string): Promise<Company> {
+    const existingByQid = await this.prisma.company.findFirst({ where: { wikidataQid: qid } });
+    if (existingByQid) return existingByQid;
+
+    const entity = await this.wikidata.getEntity(qid);
+    if (!entity || !entity.label) {
+      throw new BadRequestException(`Wikidata entity ${qid} not found or has no English label`);
+    }
+    const normalizedName = this.normalizeName(entity.label);
+    const byName = await this.prisma.company.findUnique({ where: { normalizedName } });
+    if (byName) {
+      return this.prisma.company.update({
+        where: { id: byName.id },
+        data: { wikidataQid: qid },
+      });
+    }
+    return this.prisma.company.create({
+      data: { name: entity.label, normalizedName, wikidataQid: qid },
+    });
   }
 
   // Standard suffix stripping — see COMPANY_SUFFIXES at top of file. Strips punctuation

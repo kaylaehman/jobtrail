@@ -1,4 +1,13 @@
+import { IsString, Matches } from 'class-validator';
 import { Company } from '@prisma/client';
+
+// Wikidata QID format: "Q" followed by one or more digits. Validating shape here keeps the
+// picker endpoints + linkCompany from silently 404-ing on a typo or a Wikipedia URL.
+export class QidDto {
+  @IsString()
+  @Matches(/^Q\d+$/, { message: 'qid must be a Wikidata QID like "Q312"' })
+  qid!: string;
+}
 
 // Response shape. BigInt is not JSON-serializable, so we convert revenueUsd to a string at the
 // boundary — the frontend re-parses to a number for display ($X.XB formatting).

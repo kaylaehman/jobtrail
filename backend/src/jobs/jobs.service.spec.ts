@@ -1,6 +1,7 @@
 import { JobsService } from './jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SkillsService } from '../skills/skills.service';
+import { CompaniesService } from '../companies/companies.service';
 
 describe('JobsService', () => {
   const makePrismaMock = () => ({
@@ -18,9 +19,13 @@ describe('JobsService', () => {
     extract: jest.fn().mockReturnValue({ skills: { languages: ['Python'] } }),
   } as unknown as SkillsService;
 
+  const companiesStub = {
+    findOrCreateByQid: jest.fn(),
+  } as unknown as CompaniesService;
+
   it('list applies status filter', async () => {
     const prisma = makePrismaMock();
-    const svc = new JobsService(prisma as unknown as PrismaService, skillsStub);
+    const svc = new JobsService(prisma as unknown as PrismaService, skillsStub, companiesStub);
     await svc.list({ status: 'applied' as never });
     expect(prisma.jobApplication.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ status: 'applied' }) }),
@@ -29,7 +34,7 @@ describe('JobsService', () => {
 
   it('create runs skill extraction when description provided', async () => {
     const prisma = makePrismaMock();
-    const svc = new JobsService(prisma as unknown as PrismaService, skillsStub);
+    const svc = new JobsService(prisma as unknown as PrismaService, skillsStub, companiesStub);
     await svc.create({
       company: 'Acme',
       position: 'Engineer',
@@ -47,7 +52,7 @@ describe('JobsService', () => {
 
   it('findOne throws NotFoundException for missing record', async () => {
     const prisma = makePrismaMock();
-    const svc = new JobsService(prisma as unknown as PrismaService, skillsStub);
+    const svc = new JobsService(prisma as unknown as PrismaService, skillsStub, companiesStub);
     await expect(svc.findOne('missing')).rejects.toThrow(/not found/i);
   });
 });

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SkillsService } from '../skills/skills.service';
+import { CompaniesService } from '../companies/companies.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
@@ -11,6 +12,7 @@ export class JobsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly skills: SkillsService,
+    private readonly companies: CompaniesService,
   ) {}
 
   async list(q: QueryJobDto) {
@@ -79,6 +81,19 @@ export class JobsService {
     await this.findOne(id);
     await this.prisma.jobApplication.delete({ where: { id } });
     return { deleted: true };
+  }
+
+  // Manual disambiguation: the user picked a specific Wikidata entity from the picker UI.
+  // Resolves the QID to a Company (creating one if needed), links the application, and
+  // marks the match `confirmed` so future imports + the UI know it's been verified.
+  async linkCompany(id: string, qid: string) {
+    await this.findOne(id);
+    const company = await this.companies.findOrCreateByQid(qid);
+    return this.prisma.jobApplication.update({
+      where: { id },
+      data: { companyId: company.id, companyMatchStatus: 'confirmed' },
+      include: { rounds: { orderBy: { roundNumber: 'asc' } } },
+    });
   }
 
   // Used by the Discover flow when importing JobSpy results — upsert on (source, sourceJobId).

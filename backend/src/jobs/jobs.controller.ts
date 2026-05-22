@@ -12,6 +12,7 @@ import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
+import { QidDto } from '../companies/dto/company.dto';
 
 @Controller('jobs')
 export class JobsController {
@@ -40,5 +41,12 @@ export class JobsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.jobs.remove(id);
+  }
+
+  // POST /api/jobs/:id/link-company { qid } — used by the picker UI when the user manually
+  // selects the right entity from Wikidata search results. Marks the match as confirmed.
+  @Post(':id/link-company')
+  linkCompany(@Param('id') id: string, @Body() dto: QidDto) {
+    return this.jobs.linkCompany(id, dto.qid);
   }
 }
