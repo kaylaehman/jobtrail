@@ -1,0 +1,5 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-jobspy==1.1.79
+cachetools==5.5.0
+pydantic==2.9.2
