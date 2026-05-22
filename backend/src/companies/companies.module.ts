@@ -8,6 +8,7 @@ import { WikidataSource } from './enrichment/wikidata.source';
 import { WikidataClient } from './enrichment/wikidata-client';
 import { EdgarSource } from './enrichment/edgar.source';
 import { EdgarTickerCache } from './enrichment/edgar-ticker-cache';
+import { CompanyEnrichmentCron } from './company-enrichment-cron.service';
 import { ENRICHMENT_SOURCES } from './enrichment/source.interface';
 
 @Module({
@@ -21,6 +22,7 @@ import { ENRICHMENT_SOURCES } from './enrichment/source.interface';
     WikipediaSource,
     WikidataSource,
     EdgarSource,
+    CompanyEnrichmentCron,
     // Multi-provider: declaration order here = run order in EnrichmentService.enrich.
     // Wikipedia first (cheapest, often supplies the QID Wikidata reuses), Wikidata second
     // (structured pan-international data), EDGAR last (authoritative on revenue/employees
