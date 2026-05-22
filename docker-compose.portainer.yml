@@ -91,3 +91,4 @@ services:
 
 volumes:
   jobtrail_pgdata:
+    driver: local
