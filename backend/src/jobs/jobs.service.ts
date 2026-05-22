@@ -61,6 +61,15 @@ export class JobsService {
     if (dto.description) {
       data.extractedSkills = this.skills.extract(dto.description) as unknown as Prisma.InputJsonValue;
     }
+    // Auto-link the manually-added application to a Company row — mirrors what
+    // DiscoverService.import does for JobSpy imports. Without this, manually-added
+    // apps stayed companyId=null forever, so the Dashboard table never linked their
+    // company name and JobDetail's CompanyPanel never rendered anything for them.
+    if (dto.company) {
+      const company = await this.companies.findOrCreateByNameOrDomain(dto.company, dto.companyUrl);
+      data.companyId = company.id;
+      this.companies.enqueueIfStale(company);
+    }
     const created = await this.prisma.jobApplication.create({ data });
     // Initial timeline marker. fromStatus null = "row was born with this status".
     await this.prisma.jobStatusEvent.create({
