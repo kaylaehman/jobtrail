@@ -6,7 +6,7 @@ npx prisma migrate deploy
 
 if [ "${JOBTRAIL_SEED:-true}" = "true" ]; then
   echo "[jobtrail-backend] Seeding (no-op if already seeded)..."
-  npx ts-node prisma/seed.ts || echo "[jobtrail-backend] Seed step skipped/failed (non-fatal)."
+  node prisma/seed.js || echo "[jobtrail-backend] Seed step skipped/failed (non-fatal)."
 fi
 
 echo "[jobtrail-backend] Starting server on port ${PORT:-8000}..."

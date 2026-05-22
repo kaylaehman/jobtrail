@@ -1,4 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+// Plain CommonJS so the production container can run it without ts-node.
+// Mirrors prisma/seed.ts (deleted) — kept as JS to avoid ts-node ESM issues on Node 20.
+
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
