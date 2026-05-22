@@ -62,6 +62,7 @@ test-results/
 # claude code / per-user agent state
 .remember/
 .claude/
+CLAUDE.md
 
 # misc
 *.tmp
