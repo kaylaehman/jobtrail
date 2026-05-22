@@ -169,46 +169,6 @@ smoke test on `DeadlineBadge`.
 
 ---
 
-## Decisions
-
-The spec leaves some choices open; here is what JobTrail's MVP committed to.
-
-- **Skill matcher** (`backend/src/skills/skills.service.ts`) uses alphanumeric
-  lookaround regex (`(?<![A-Za-z0-9])skill(?![A-Za-z0-9])`) instead of `\b`.
-  Word boundaries can't bracket skills like `c++` or `node.js` because `+` and
-  `.` aren't word chars; asserting non-alphanumeric neighbors gives the same
-  semantics for `react` while leaving punctuation-bearing skills alone.
-- **Timeline visual style**: ASCII-fidelity tree (├ / └ in a monospaced font)
-  to match REQUIREMENTS.md §8.2 character-for-character.
-- **Deadline urgency**: two tiers — amber ≤7 days, red overdue. No 3-day red
-  tier; the MVP optimizes for low visual noise.
-- **Re-import behavior**: `(source, source_job_id)` upserts refresh
-  URL/salary/location/description but never overwrite the user's status or
-  notes. Manual entries (`source = 'manual'`) never dedupe.
-- **Migrations**: `prisma migrate deploy` runs in the backend entrypoint. The
-  initial migration is hand-written so a clean Postgres comes up without
-  needing `migrate dev`.
-- **JobSpy cache**: in-memory TTLCache only (resets on container restart).
-  Cross-restart caching would mean adding Redis, which is out of scope.
-- **No auth**: single-user local deployment per spec §1.3. Adding auth is a
-  Phase 4 / commercial-track concern.
-
----
-
-## Out of scope (deliberately)
-
-Per the prompt, none of the following are scaffolded:
-
-- multi-user auth / RBAC
-- calendar sync (FR-8)
-- email parsing (FR-9)
-- resume matching (FR-10)
-- OpenAI / GPT calls (any phase)
-- analytics dashboards (FR-12)
-
-Add them when you actually need them — don't preempt the architecture.
-
----
 
 ## License
 
