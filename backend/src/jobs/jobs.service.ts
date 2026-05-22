@@ -66,7 +66,11 @@ export class JobsService {
     await this.prisma.jobStatusEvent.create({
       data: { jobApplicationId: created.id, fromStatus: null, toStatus: created.status },
     });
-    return this.prisma.jobApplication.findUnique({
+    // findUniqueOrThrow (not findUnique) — the row was created two statements above so
+    // null isn't possible at runtime. Using the non-nullable variant lets the return type
+    // propagate as JobApplication through upsertFromSource into DiscoverService.import,
+    // where downstream code reads app.companyMatchStatus / app.companyId without TS18047.
+    return this.prisma.jobApplication.findUniqueOrThrow({
       where: { id: created.id },
       include: JOB_DETAIL_INCLUDE,
     });
