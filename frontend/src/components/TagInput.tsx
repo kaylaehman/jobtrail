@@ -108,14 +108,14 @@ export function TagInput({ value, onChange, suggestions = [], placeholder }: Tag
       </div>
 
       {open && filtered.length > 0 && (
-        <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
+        <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-slate-700 bg-slate-800 shadow-lg">
           {filtered.map((s, i) => (
             <li key={s}>
               <button
                 type="button"
                 className={
-                  'block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100 ' +
-                  (i === activeIndex ? 'bg-slate-100' : '')
+                  'block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-700 ' +
+                  (i === activeIndex ? 'bg-slate-700' : '')
                 }
                 // onMouseDown beats onBlur — keeps the click registering before the input blurs.
                 onMouseDown={(e) => {

@@ -17,14 +17,14 @@ export function StatusTimeline({ events }: { events: JobStatusEvent[] }) {
   }
 
   return (
-    <ol className="relative ml-2 space-y-3 border-l border-slate-300">
+    <ol className="relative ml-2 space-y-3 border-l border-slate-600">
       {events.map((event) => (
         <li key={event.id} className="ml-4">
           <span
             aria-hidden
-            className="absolute -left-[6px] mt-1.5 h-3 w-3 rounded-full border-2 border-white bg-slate-400 ring-1 ring-slate-300"
+            className="absolute -left-[6px] mt-1.5 h-3 w-3 rounded-full border-2 border-slate-800 bg-slate-400 ring-1 ring-slate-600"
           />
-          <time className="text-xs text-slate-500">{formatDate(event.createdAt)}</time>
+          <time className="text-xs text-slate-400">{formatDate(event.createdAt)}</time>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {event.fromStatus ? (
               <>
@@ -34,7 +34,7 @@ export function StatusTimeline({ events }: { events: JobStatusEvent[] }) {
               </>
             ) : (
               <>
-                <span className="text-xs text-slate-500">Created as</span>
+                <span className="text-xs text-slate-400">Created as</span>
                 <StatusPill status={event.toStatus} />
               </>
             )}

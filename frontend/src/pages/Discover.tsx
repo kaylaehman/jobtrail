@@ -52,7 +52,7 @@ export function Discover() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Discover</h1>
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-slate-400">
         Search jobs across LinkedIn, Indeed, Glassdoor, Google, and ZipRecruiter via JobSpy. Identical queries are
         cached for 10 minutes to avoid rate limits.
       </p>
@@ -72,7 +72,7 @@ export function Discover() {
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-slate-300">
             Search term
             <input
               className="input mt-1"
@@ -81,7 +81,7 @@ export function Discover() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </label>
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-slate-300">
             Location
             <input
               className="input mt-1"
@@ -90,7 +90,7 @@ export function Discover() {
               onChange={(e) => setLocation(e.target.value)}
             />
           </label>
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-slate-300">
             Results wanted
             <input
               className="input mt-1"
@@ -101,7 +101,7 @@ export function Discover() {
               onChange={(e) => setResultsWanted(parseInt(e.target.value || '25', 10))}
             />
           </label>
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-slate-300">
             Max age (hours)
             <input
               className="input mt-1"
@@ -121,7 +121,7 @@ export function Discover() {
             {search.isPending ? 'Searching…' : 'Search'}
           </button>
           {search.data && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400">
               {search.data.count} result{search.data.count === 1 ? '' : 's'}
               {search.data.cached ? ' · cached' : ''}
             </span>
@@ -138,7 +138,7 @@ export function Discover() {
       {search.data && search.data.results.length > 0 && (
         <div className="card overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left">
+            <thead className="bg-slate-900 text-left text-slate-300">
               <tr>
                 <th className="px-3 py-2">Site</th>
                 <th className="px-3 py-2">Company</th>
@@ -152,7 +152,7 @@ export function Discover() {
               {search.data.results.map((r) => {
                 const imported = importedIds.has(r.id);
                 return (
-                  <tr key={`${r.site}-${r.id}`} className="border-t border-slate-200 hover:bg-slate-50">
+                  <tr key={`${r.site}-${r.id}`} className="border-t border-slate-700 hover:bg-slate-900/50">
                     <td className="px-3 py-2 capitalize">{r.site}</td>
                     <td className="px-3 py-2">{r.company ?? '—'}</td>
                     <td className="px-3 py-2">

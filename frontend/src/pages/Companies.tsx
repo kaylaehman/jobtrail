@@ -34,10 +34,10 @@ export function Companies() {
         />
       </div>
 
-      {isLoading && <div className="text-slate-500">Loading…</div>}
+      {isLoading && <div className="text-slate-400">Loading…</div>}
 
       {!isLoading && filtered.length === 0 && (
-        <div className="card p-6 text-center text-slate-500">
+        <div className="card p-6 text-center text-slate-400">
           {companies && companies.length === 0
             ? 'No companies yet — import a job from Discover to get started.'
             : 'No matches for that search.'}
@@ -64,18 +64,18 @@ function CompanyCard({ company: c }: { company: CompanyListItem }) {
   return (
     <Link
       to={`/companies/${c.id}`}
-      className="card p-3 flex gap-3 hover:border-slate-300 transition"
+      className="card p-3 flex gap-3 hover:border-slate-500 transition"
     >
       <CompanyLogo domain={c.domain} name={c.name} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold truncate">{c.name}</h3>
-          <span className="text-xs text-slate-500 shrink-0">
+          <span className="text-xs text-slate-400 shrink-0">
             {c.applicationCount} app{c.applicationCount === 1 ? '' : 's'}
           </span>
         </div>
         {facts.length > 0 && (
-          <div className="text-xs text-slate-600 truncate">{facts.join(' · ')}</div>
+          <div className="text-xs text-slate-400 truncate">{facts.join(' · ')}</div>
         )}
         {c.description && (
           <p className="text-xs text-slate-500 mt-1 line-clamp-2">{c.description}</p>
@@ -99,7 +99,7 @@ function CompanyLogo({ domain, name }: { domain: string | null; name: string }) 
     <img
       src={`https://logo.clearbit.com/${domain}`}
       alt=""
-      className="h-10 w-10 shrink-0 rounded object-contain bg-white border border-slate-200"
+      className="h-10 w-10 shrink-0 rounded object-contain bg-white border border-slate-700"
       onError={() => setErrored(true)}
     />
   );

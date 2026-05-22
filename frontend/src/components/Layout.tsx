@@ -12,13 +12,13 @@ export function Layout() {
 
   return (
     <div className="min-h-screen">
-      <header className="bg-brand-navy border-b border-brand-navy-deep shadow-sm">
+      <header className="bg-brand-navy border-b border-slate-800 shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2">
           <Link to="/" className="flex items-center" aria-label="JobTrail home">
             <img
-              src="/jobtrail-banner.png"
-              alt="JobTrail — Track. Discover. Land."
-              className="h-12 w-auto"
+              src="/jobtrail-header.png"
+              alt="JobTrail"
+              className="h-10 w-auto"
             />
           </Link>
           <nav className="flex items-center gap-1">

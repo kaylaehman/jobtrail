@@ -71,13 +71,13 @@ function SortHeader({
   const active = sortBy === sortKey;
   return (
     <th
-      className="px-3 py-2 cursor-pointer select-none hover:bg-slate-200/60"
+      className="px-3 py-2 cursor-pointer select-none hover:bg-slate-700/40"
       aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
       onClick={() => onSort(sortKey)}
     >
       <span className="inline-flex items-center gap-1">
         {label}
-        <span className={active ? 'text-slate-900' : 'text-slate-400'}>
+        <span className={active ? 'text-slate-100' : 'text-slate-500'}>
           {active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
         </span>
       </span>
@@ -152,11 +152,11 @@ export function Dashboard() {
         />
       </div>
 
-      {isLoading && <div className="text-slate-500">Loading…</div>}
+      {isLoading && <div className="text-slate-400">Loading…</div>}
       {isError && <div className="text-rejected">Failed to load applications.</div>}
 
       {sorted && sorted.length === 0 && (
-        <div className="card p-6 text-center text-slate-500">
+        <div className="card p-6 text-center text-slate-400">
           No applications yet. <Link to="/discover" className="text-applied underline">Discover jobs</Link>{' '}
           or <Link to="/jobs/new" className="text-applied underline">add one manually</Link>.
         </div>
@@ -165,7 +165,7 @@ export function Dashboard() {
       {sorted && sorted.length > 0 && (
         <div className="card overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left">
+            <thead className="bg-slate-900 text-left text-slate-300">
               <tr>
                 <SortHeader label="Company" sortKey="company" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Position" sortKey="position" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
@@ -179,7 +179,7 @@ export function Dashboard() {
               {sorted.map((j) => {
                 const next = j.rounds.find((r) => r.status === 'scheduled');
                 return (
-                  <tr key={j.id} className="border-t border-slate-200 hover:bg-slate-50">
+                  <tr key={j.id} className="border-t border-slate-700 hover:bg-slate-900/40">
                     <td className="px-3 py-2">
                       <Link to={`/jobs/${j.id}`} className="font-medium hover:underline">{j.company}</Link>
                       {j.companyUrl && (
@@ -203,7 +203,7 @@ export function Dashboard() {
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-1">
                         {j.tags.map((t) => (
-                          <span key={t} className="rounded bg-slate-200 px-1.5 py-0.5 text-xs">{t}</span>
+                          <span key={t} className="rounded bg-slate-700 text-slate-100 px-1.5 py-0.5 text-xs">{t}</span>
                         ))}
                       </div>
                     </td>

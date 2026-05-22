@@ -24,7 +24,7 @@ export function RoundTimeline({
 
   if (rounds.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+      <div className="rounded-md border border-dashed border-slate-600 p-4 text-sm text-slate-400">
         No interview rounds yet. Click "Add round" to start tracking.
       </div>
     );
@@ -32,7 +32,7 @@ export function RoundTimeline({
 
   return (
     <div className="timeline-mono text-sm">
-      <div className="mb-2 text-slate-600">Round History:</div>
+      <div className="mb-2 text-slate-300">Round History:</div>
       {rounds.map((round, idx) => {
         const isLast = idx === rounds.length - 1;
         const branch = isLast ? '└─' : '├─';
@@ -52,7 +52,7 @@ export function RoundTimeline({
             </div>
             <div className="whitespace-pre-wrap">
               {rail}
-              {'└─ '}Notes: {round.notes || <span className="italic text-slate-400">—</span>}
+              {'└─ '}Notes: {round.notes || <span className="italic text-slate-500">—</span>}
             </div>
           </>
         );
@@ -62,7 +62,7 @@ export function RoundTimeline({
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                className="text-left hover:bg-slate-100 rounded px-1 -mx-1"
+                className="text-left hover:bg-slate-700 rounded px-1 -mx-1"
                 onClick={() =>
                   setCollapsed((prev) => ({ ...prev, [round.id]: !prev[round.id] }))
                 }

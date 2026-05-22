@@ -40,7 +40,7 @@ export function ConfirmResetModal({
               <li>{result.enrichmentCacheCleared} cached API response{result.enrichmentCacheCleared === 1 ? '' : 's'}</li>
             )}
           </ul>
-          <p className="text-sm text-slate-600">Your settings (date format, recent tags) were preserved.</p>
+          <p className="text-sm text-slate-400">Your settings (date format, recent tags) were preserved.</p>
           <div className="flex justify-end">
             <button className="btn btn-primary" onClick={() => { setTyped(''); setWipeCache(false); onClose(); }}>
               Done
@@ -54,7 +54,7 @@ export function ConfirmResetModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="card max-w-md w-full p-6 space-y-4">
-        <h2 className="text-xl font-bold text-red-600">⚠️ Reset all data</h2>
+        <h2 className="text-xl font-bold text-red-400">⚠️ Reset all data</h2>
         <p className="text-sm">This permanently deletes:</p>
         <ul className="text-sm list-disc pl-5 space-y-1">
           <li>All job applications</li>
@@ -62,7 +62,7 @@ export function ConfirmResetModal({
           <li>All status history</li>
           <li>All enriched company data</li>
         </ul>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-400">
           Your settings (date format, recent tags) will be preserved.
         </p>
 
@@ -76,14 +76,14 @@ export function ConfirmResetModal({
           />
           <span>
             Also clear the HTTP cache for company-enrichment APIs.
-            <span className="block text-xs text-slate-500">
+            <span className="block text-xs text-slate-400">
               Slower next enrichment run; usually leave unchecked.
             </span>
           </span>
         </label>
 
         <label className="block text-sm">
-          Type <code className="rounded bg-slate-100 px-1">{REQUIRED_PHRASE}</code> to confirm:
+          Type <code className="rounded bg-slate-900 border border-slate-700 px-1">{REQUIRED_PHRASE}</code> to confirm:
           <input
             className="input mt-1 font-mono"
             value={typed}

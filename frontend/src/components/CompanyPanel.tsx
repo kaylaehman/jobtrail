@@ -33,13 +33,13 @@ export function CompanyPanel({
           <h2 className="text-lg font-semibold">Company</h2>
           <button
             type="button"
-            className="text-xs text-slate-500 underline hover:text-slate-700"
+            className="text-xs text-slate-400 underline hover:text-slate-200"
             onClick={() => updateJob.mutate({ companyMatchStatus: 'auto' } as never)}
           >
             ↩ Restore auto-match
           </button>
         </div>
-        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+        <div className="text-sm text-amber-200 bg-amber-900/30 border border-amber-700/50 rounded p-2">
           Match was rejected — search for the right company below.
         </div>
         <CompanyPicker jobId={jobId} />
@@ -75,13 +75,13 @@ export function CompanyPanel({
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold truncate">{company.name}</h2>
             {matchStatus === 'confirmed' && (
-              <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+              <span className="text-xs text-emerald-200 bg-emerald-900/30 border border-emerald-700/50 rounded px-1.5 py-0.5">
                 ✓ verified
               </span>
             )}
           </div>
           {(company.industry || company.hqLocation) && (
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-slate-400">
               {[company.industry, company.hqLocation].filter(Boolean).join(' · ')}
             </div>
           )}
@@ -98,7 +98,7 @@ export function CompanyPanel({
       </div>
 
       {company.description && (
-        <p className="text-sm text-slate-700 leading-snug line-clamp-4">
+        <p className="text-sm text-slate-300 leading-snug line-clamp-4">
           {company.description}
         </p>
       )}
@@ -125,7 +125,7 @@ function CompanyLogo({ domain, name }: { domain: string | null; name: string }) 
     <img
       src={`https://logo.clearbit.com/${domain}`}
       alt={`${name} logo`}
-      className="h-12 w-12 shrink-0 rounded object-contain bg-white border border-slate-200"
+      className="h-12 w-12 shrink-0 rounded object-contain bg-white border border-slate-700"
       onError={() => setErrored(true)}
     />
   );
@@ -140,7 +140,7 @@ function CompanyFacts({ company }: { company: Company }) {
   ].filter(Boolean);
   if (facts.length === 0 && !company.website) return null;
   return (
-    <div className="text-xs text-slate-600 flex flex-wrap gap-x-3 gap-y-1">
+    <div className="text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
       {facts.map((f, i) => (
         <span key={i}>{f}</span>
       ))}
@@ -149,7 +149,7 @@ function CompanyFacts({ company }: { company: Company }) {
           href={company.website}
           target="_blank"
           rel="noreferrer"
-          className="text-applied underline hover:no-underline"
+          className="text-brand-sky underline hover:no-underline"
         >
           {prettyDomain(company.website)} ↗
         </a>
@@ -172,13 +172,13 @@ function CompanyFooter({
   const sources = Object.keys(company.sources ?? {}).filter((k) => company.sources[k]);
   const distinctSources = Array.from(new Set(Object.values(company.sources ?? {})));
   return (
-    <div className="border-t border-slate-100 pt-2 space-y-2">
+    <div className="border-t border-slate-700 pt-2 space-y-2">
       {company.enrichmentError && (
-        <div className="text-xs text-amber-700">
+        <div className="text-xs text-amber-300">
           ⚠ enrichment had errors: {company.enrichmentError}
         </div>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
         <span>
           {company.lastEnrichedAt
             ? `Updated ${formatDate(company.lastEnrichedAt)}`
@@ -198,7 +198,7 @@ function CompanyFooter({
       </div>
       {matchStatus === 'auto' && (
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-600">Is this the right company?</span>
+          <span className="text-slate-300">Is this the right company?</span>
           <button
             type="button"
             className="btn !py-0.5 !px-2 text-xs"

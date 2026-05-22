@@ -40,28 +40,28 @@ export function SkillChips({
 
   return (
     <div className="space-y-3">
-      <div className="text-sm text-slate-700">
+      <div className="text-sm text-slate-200">
         📋 <strong>Job Requirements Analysis</strong>{' '}
-        <span className="text-slate-500">(auto-extracted from description)</span>
+        <span className="text-slate-400">(auto-extracted from description)</span>
       </div>
       {CATEGORY_LABELS.map(({ key, label, icon }) => (
         <div key={key} className="flex flex-wrap items-center gap-2">
-          <div className="w-44 text-xs uppercase tracking-wide text-slate-500">
+          <div className="w-44 text-xs uppercase tracking-wide text-slate-400">
             {icon} {label}
           </div>
           {skills.skills[key].length === 0 && (
-            <span className="text-xs italic text-slate-400">none detected</span>
+            <span className="text-xs italic text-slate-500">none detected</span>
           )}
           {skills.skills[key].map((skill) => (
             <span
               key={skill}
-              className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-xs"
+              className="inline-flex items-center gap-1 rounded-full bg-slate-700 text-slate-100 px-2 py-0.5 text-xs"
             >
               #{skill}
               {onChange && (
                 <button
                   type="button"
-                  className="text-slate-500 hover:text-rejected"
+                  className="text-slate-400 hover:text-rejected"
                   onClick={() => removeSkill(key, skill)}
                   aria-label={`Remove ${skill}`}
                 >
@@ -77,7 +77,7 @@ export function SkillChips({
           )}
         </div>
       ))}
-      <div className="flex flex-wrap gap-4 pt-2 text-xs text-slate-600">
+      <div className="flex flex-wrap gap-4 pt-2 text-xs text-slate-400">
         {skills.experienceLevel && <span>💼 Experience: {skills.experienceLevel}</span>}
         {skills.workArrangement && <span>🏢 Work: {skills.workArrangement}</span>}
       </div>

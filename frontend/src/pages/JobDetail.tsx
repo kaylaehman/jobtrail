@@ -35,7 +35,7 @@ export function JobDetail() {
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
   const { formatDate } = useAppSettings();
 
-  if (isLoading || !job) return <div className="text-slate-500">Loading…</div>;
+  if (isLoading || !job) return <div className="text-slate-400">Loading…</div>;
 
   // §8.2 application status overview header
   const totalRounds = job.rounds.length;
@@ -53,7 +53,7 @@ export function JobDetail() {
       <div className="card p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="text-xs uppercase text-slate-500">
+            <div className="text-xs uppercase text-slate-400">
               Application Status: {progressLabel}
               {nextScheduled?.scheduledAt && ` | Next: ${formatDate(nextScheduled.scheduledAt)}`}
             </div>
@@ -71,10 +71,10 @@ export function JobDetail() {
               ) : (
                 job.company
               )}{' '}
-              <span className="text-slate-400">|</span> {job.position}
+              <span className="text-slate-500">|</span> {job.position}
               <DeadlineBadge deadline={job.deadline} />
             </div>
-            <div className="text-sm text-slate-600 mt-1">
+            <div className="text-sm text-slate-400 mt-1">
               <StatusPill status={job.status} />{' '}
               {job.location && <span className="ml-2">📍 {job.location}</span>}
               {job.remote && <span className="ml-2">🌐 Remote</span>}
@@ -257,7 +257,7 @@ export function JobDetail() {
       {job.description && (
         <details className="card p-4">
           <summary className="cursor-pointer font-semibold">Job description</summary>
-          <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{job.description}</pre>
+          <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{job.description}</pre>
         </details>
       )}
     </div>
