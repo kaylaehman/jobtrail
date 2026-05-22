@@ -80,6 +80,7 @@ model JobApplication {
   companyMatchStatus CompanyMatchStatus @default(auto) @map("company_match_status")
 
   rounds           InterviewRound[]
+  statusEvents     JobStatusEvent[]
   // `company` (string) stays as the import-time snapshot; `companyEntity` is the enriched profile.
   // FK is ON DELETE SET NULL so pruning a Company row never cascades into application loss.
   companyEntity    Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
@@ -151,6 +152,23 @@ model EnrichmentCache {
 
   @@index([expiresAt])
   @@map("enrichment_cache")
+}
+
+// Append-only log of status transitions for the JobDetail timeline view.
+// fromStatus is null for the initial event (row creation) — renders as a "start" marker
+// rather than a transition arrow. `note` is reserved for future manual annotations.
+model JobStatusEvent {
+  id               String           @id @default(cuid())
+  jobApplicationId String           @map("job_application_id")
+  fromStatus       JobStatus?       @map("from_status")
+  toStatus         JobStatus        @map("to_status")
+  note             String?          @db.Text
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  jobApplication   JobApplication   @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([jobApplicationId, createdAt])
+  @@map("job_status_events")
 }
 
 model InterviewRound {

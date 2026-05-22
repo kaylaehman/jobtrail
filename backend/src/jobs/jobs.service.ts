@@ -7,6 +7,13 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
 
+// Detail-page `include` shared by every method that returns a full application.
+// statusEvents come back newest-first so the timeline doesn't need to reverse client-side.
+const JOB_DETAIL_INCLUDE = {
+  rounds: { orderBy: { roundNumber: 'asc' } },
+  statusEvents: { orderBy: { createdAt: 'desc' } },
+} satisfies Prisma.JobApplicationInclude;
+
 @Injectable()
 export class JobsService {
   constructor(
@@ -42,7 +49,7 @@ export class JobsService {
   async findOne(id: string) {
     const job = await this.prisma.jobApplication.findUnique({
       where: { id },
-      include: { rounds: { orderBy: { roundNumber: 'asc' } } },
+      include: JOB_DETAIL_INCLUDE,
     });
     if (!job) throw new NotFoundException(`Job ${id} not found`);
     return job;
@@ -53,11 +60,19 @@ export class JobsService {
     if (dto.description) {
       data.extractedSkills = this.skills.extract(dto.description) as unknown as Prisma.InputJsonValue;
     }
-    return this.prisma.jobApplication.create({ data, include: { rounds: true } });
+    const created = await this.prisma.jobApplication.create({ data });
+    // Initial timeline marker. fromStatus null = "row was born with this status".
+    await this.prisma.jobStatusEvent.create({
+      data: { jobApplicationId: created.id, fromStatus: null, toStatus: created.status },
+    });
+    return this.prisma.jobApplication.findUnique({
+      where: { id: created.id },
+      include: JOB_DETAIL_INCLUDE,
+    });
   }
 
   async update(id: string, dto: UpdateJobDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     const data = this.toPrismaData(dto);
     if (dto.description !== undefined) {
       data.extractedSkills = dto.description
@@ -70,10 +85,18 @@ export class JobsService {
     if (dto.companyMatchStatus === 'rejected') {
       data.companyId = null;
     }
+    // Log status transition. Two writes intentionally not wrapped in a transaction — for a
+    // single-user local app the consistency window is microseconds, and a stray event row with
+    // no matching update is harmless (timeline just shows an attempted transition).
+    if (dto.status && dto.status !== existing.status) {
+      await this.prisma.jobStatusEvent.create({
+        data: { jobApplicationId: id, fromStatus: existing.status, toStatus: dto.status },
+      });
+    }
     return this.prisma.jobApplication.update({
       where: { id },
       data,
-      include: { rounds: { orderBy: { roundNumber: 'asc' } } },
+      include: JOB_DETAIL_INCLUDE,
     });
   }
 
@@ -92,7 +115,7 @@ export class JobsService {
     return this.prisma.jobApplication.update({
       where: { id },
       data: { companyId: company.id, companyMatchStatus: 'confirmed' },
-      include: { rounds: { orderBy: { roundNumber: 'asc' } } },
+      include: JOB_DETAIL_INCLUDE,
     });
   }
 
