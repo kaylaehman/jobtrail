@@ -181,7 +181,24 @@ undertaking and would lose upstream maintenance.
 
 That's it — no Node / Python / Postgres needed on the host.
 
-## Run it
+## Quick start — try it without cloning
+
+If you just want to spin up JobTrail with no setup, grab the prebuilt-image compose file from this repo and run it. Multi-arch images cover Intel/AMD, Apple Silicon, and ARM SBCs.
+
+```sh
+curl -O https://raw.githubusercontent.com/kaylaehman/jobtrail/main/compose.hub.yml
+docker compose -f compose.hub.yml up -d
+```
+
+Open <http://localhost:3000>. First-time DB init + migrations + seed takes ~30 seconds. To stop and remove the volume:
+
+```sh
+docker compose -f compose.hub.yml down -v
+```
+
+The images live at <https://hub.docker.com/u/kaylaehman> — `jobtrail-frontend`, `jobtrail-backend`, `jobtrail-jobspy`. Pinning a specific build is just `JOBTRAIL_IMAGE_TAG=sha-abc1234 docker compose -f compose.hub.yml up -d`.
+
+## Run from source (dev / local builds)
 
 ```sh
 cp .env.example .env          # optional, only if you want to override defaults

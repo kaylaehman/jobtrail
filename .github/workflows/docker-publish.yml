@@ -80,3 +80,26 @@ jobs:
           # skip layers that haven't changed. Big speed-up on incremental commits.
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Sync the same docs/docker-hub.md README onto every published Docker Hub repository so
+  # anyone landing via Docker Desktop search sees the full project description, install
+  # instructions, and a link back to the source. Runs after the builds succeed.
+  sync-readme:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend, jobspy]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync Docker Hub README
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/jobtrail-${{ matrix.service }}
+          readme-filepath: ./docs/docker-hub.md
+          short-description: "JobTrail — self-hosted job-application tracker with JobSpy discovery + keyless company enrichment"

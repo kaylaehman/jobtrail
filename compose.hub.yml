@@ -1,0 +1,66 @@
+# JobTrail — quick-start stack using pre-built multi-arch images from Docker Hub.
+#
+# No clone needed. Run:
+#   curl -O https://raw.githubusercontent.com/kaylaehman/jobtrail/main/compose.hub.yml
+#   docker compose -f compose.hub.yml up -d
+# Then open http://localhost:3000.
+#
+# To stop and remove everything (including the database volume):
+#   docker compose -f compose.hub.yml down -v
+#
+# All three application images are multi-arch (linux/amd64 + linux/arm64) so this works
+# on Intel/AMD desktops, Apple Silicon, and ARM SBCs without changes.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobtrail}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobtrail}
+      POSTGRES_DB: ${POSTGRES_DB:-jobtrail}
+    volumes:
+      - jobtrail_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobtrail} -d ${POSTGRES_DB:-jobtrail}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  jobspy:
+    image: ${JOBTRAIL_IMAGE_NAMESPACE:-kaylaehman}/jobtrail-jobspy:${JOBTRAIL_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      JOBSPY_CACHE_TTL: ${JOBSPY_CACHE_TTL:-600}
+      JOBSPY_PROXIES: ${JOBSPY_PROXIES:-}
+    expose:
+      - "8001"
+
+  backend:
+    image: ${JOBTRAIL_IMAGE_NAMESPACE:-kaylaehman}/jobtrail-backend:${JOBTRAIL_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      jobspy:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jobtrail}:${POSTGRES_PASSWORD:-jobtrail}@db:5432/${POSTGRES_DB:-jobtrail}?schema=public
+      JOBSPY_URL: http://jobspy:8001
+      PORT: 8000
+      NODE_ENV: production
+    expose:
+      - "8000"
+
+  frontend:
+    # The frontend image's nginx reverse-proxies /api/* to the backend container. End users
+    # only need the one host port exposed below.
+    image: ${JOBTRAIL_IMAGE_NAMESPACE:-kaylaehman}/jobtrail-frontend:${JOBTRAIL_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${JOBTRAIL_FRONTEND_PORT:-3000}:80"
+
+volumes:
+  jobtrail_pgdata:
