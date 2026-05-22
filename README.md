@@ -1,6 +1,6 @@
 # JobTrail
 
-![JobTrail — Track. Discover. Land.](./jobtrail-banner.png)
+![JobTrail — Track. Discover. Land.](./docs/jobtrail-banner.png)
 
 A self-hosted job-application tracker with a JobSpy-powered discovery pipeline.
 
