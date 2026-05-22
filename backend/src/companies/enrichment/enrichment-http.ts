@@ -18,8 +18,14 @@ const HOST_CONFIG: Record<string, HostConfig> = {
 };
 const DEFAULT_CONFIG: HostConfig = { minGapMs: 100, maxConcurrent: 4 };
 
-// EDGAR returns 403 without a real-looking User-Agent; Wikidata's policy also requires one.
-const USER_AGENT = 'JobTrail/0.1 (https://github.com/kaylaehman/jobtrail)';
+// SEC EDGAR's fair-use policy (https://www.sec.gov/os/accessing-edgar-data) requires the
+// User-Agent to include a contact email so they can reach you about abusive traffic. Without
+// it they 403. Wikidata's policy is similar but less strict. JOBTRAIL_CONTACT_EMAIL lets the
+// operator override; the fallback uses the GitHub-provided no-reply email, which is a real
+// deliverable address that forwards to the project owner.
+const CONTACT_EMAIL =
+  process.env.JOBTRAIL_CONTACT_EMAIL || '177765088+kaylaehman@users.noreply.github.com';
+const USER_AGENT = `JobTrail/0.1 ${CONTACT_EMAIL} (https://github.com/kaylaehman/jobtrail)`;
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 @Injectable()
