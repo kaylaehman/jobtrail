@@ -18,7 +18,7 @@ const STATUS_OPTIONS: Array<JobStatus | ''> = [
   'withdrawn',
 ];
 
-type SortKey = 'company' | 'position' | 'status' | 'applied' | 'next' | 'tags';
+type SortKey = 'company' | 'position' | 'status' | 'applied' | 'jobType' | 'tags';
 type SortDir = 'asc' | 'desc';
 
 // Status order for sorting — follows pipeline progression so "Saved → Applied → … → Offer" sorts ascending.
@@ -32,20 +32,13 @@ const STATUS_RANK: Record<JobStatus, number> = {
   withdrawn: 6,
 };
 
-function nextScheduledAt(j: JobApplication): string | null {
-  return j.rounds.find((r) => r.status === 'scheduled')?.scheduledAt ?? null;
-}
-
 function getSortValue(j: JobApplication, key: SortKey): string | number | null {
   switch (key) {
     case 'company': return j.company.toLowerCase();
     case 'position': return j.position.toLowerCase();
     case 'status': return STATUS_RANK[j.status];
     case 'applied': return j.appliedAt ? new Date(j.appliedAt).getTime() : null;
-    case 'next': return (() => {
-      const iso = nextScheduledAt(j);
-      return iso ? new Date(iso).getTime() : null;
-    })();
+    case 'jobType': return j.jobType ?? null;
     case 'tags': return j.tags[0]?.toLowerCase() ?? null;
   }
 }
@@ -113,8 +106,8 @@ export function Dashboard() {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortBy(k);
-      // Date-y columns feel more natural as desc first (most recent / soonest at top).
-      setSortDir(k === 'applied' || k === 'next' ? 'desc' : 'asc');
+      // Date-y columns feel more natural as desc first (most recent at top).
+      setSortDir(k === 'applied' ? 'desc' : 'asc');
     }
   };
 
@@ -192,13 +185,12 @@ export function Dashboard() {
                 <SortHeader label="Position" sortKey="position" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Status" sortKey="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Applied" sortKey="applied" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <SortHeader label="Next round" sortKey="next" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Job type" sortKey="jobType" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Tags" sortKey="tags" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
               </tr>
             </thead>
             <tbody>
               {sorted.map((j) => {
-                const next = j.rounds.find((r) => r.status === 'scheduled');
                 return (
                   <tr key={j.id} className="border-t border-slate-700 hover:bg-slate-900/40">
                     <td className="px-3 py-2">
@@ -222,7 +214,7 @@ export function Dashboard() {
                     </td>
                     <td className="px-3 py-2"><StatusPill status={j.status} /></td>
                     <td className="px-3 py-2">{formatDate(j.appliedAt)}</td>
-                    <td className="px-3 py-2">{next ? formatDate(next.scheduledAt) : '—'}</td>
+                    <td className="px-3 py-2 text-slate-300">{j.jobType ? JOB_TYPE_LABEL[j.jobType] : '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-1">
                         {j.tags.map((t) => (
