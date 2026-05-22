@@ -35,15 +35,15 @@ describe('SkillsService', () => {
 
     // The next two assertions only pass once the user implements a real matcher.
     // The stubbed substring matcher fails them on purpose.
-    it.skip('rejects "react" inside "reacted"', () => {
+    it('rejects "react" inside "reacted"', () => {
       expect(svc.findSkillInContext('she reacted to the news', 'react')).toBe(false);
     });
 
-    it.skip('rejects "go" inside "google"', () => {
+    it('rejects "go" inside "google"', () => {
       expect(svc.findSkillInContext('google for answers', 'go')).toBe(false);
     });
 
-    it.skip('matches "c++" with its punctuation', () => {
+    it('matches "c++" with its punctuation', () => {
       expect(svc.findSkillInContext('strong c++ background required', 'c++')).toBe(true);
     });
   });

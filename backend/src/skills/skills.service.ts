@@ -48,36 +48,21 @@ export class SkillsService {
   }
 
   /**
-   * Decide whether `skill` is genuinely mentioned in `text`.
+   * Decide whether `skill` is genuinely mentioned in `text`. Both inputs are
+   * already lowercased. Spec ref: REQUIREMENTS.md §10.2.
    *
-   * ⚠️ TODO(user): implement this matcher.
-   *
-   * Both arguments are already lowercased. Return true iff the skill is
-   * mentioned as a discrete token — not as a substring of an unrelated word.
-   *
-   * Trade-offs to consider:
-   *   - `text.includes(skill)` is fast but produces false positives:
-   *     "react" matches "reacted", "go" matches "google", "c++" needs escaping.
-   *   - Word-boundary regex (`\b`) is closer but `\b` doesn't fire on `.` or `+`,
-   *     so "node.js" and "c++" need special handling.
-   *   - Some skills are inherently noisy as substrings ("go", "r", "c"). Decide
-   *     whether to treat short or symbol-bearing skills with stricter rules.
-   *
-   * The spec (REQUIREMENTS.md §10.2) names this exact function. Keep it pure
-   * and synchronous — it is called once per (skill, description) pair.
-   *
-   * Examples the tests will check:
-   *   findSkillInContext("we use react and node.js daily", "react")  → true
-   *   findSkillInContext("she reacted to the news", "react")          → false
-   *   findSkillInContext("strong c++ background", "c++")              → true
-   *   findSkillInContext("must know go and rust", "go")               → true
-   *   findSkillInContext("google for answers", "go")                  → false
+   * Approach: escape regex metacharacters in the skill, then bracket it with
+   * alphanumeric lookarounds. `\b` is unusable here — it sits between a
+   * word char and a non-word char, so it never fires on the `+` in "c++" or
+   * the `.` in "node.js". Asserting that the *adjacent* char is not
+   * alphanumeric is the right invariant: it gives word-boundary semantics for
+   * "react" while leaving "c++" and "node.js" alone.
    */
   findSkillInContext(text: string, skill: string): boolean {
-    // TODO(user): replace this stub with the real matcher.
-    // The stub uses naive substring matching so the rest of the pipeline runs;
-    // it intentionally fails the false-positive tests until you implement it.
-    return text.includes(skill);
+    if (!skill) return false;
+    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(?<![A-Za-z0-9])${escaped}(?![A-Za-z0-9])`);
+    return re.test(text);
   }
 
   private extractExperienceLevel(text: string): string | null {

@@ -162,8 +162,8 @@ Backend has Jest unit specs for `JobsService`, `RoundsService`,
 `DiscoverService`, and `SkillsService`. Frontend has a Vitest + Testing Library
 smoke test on `DeadlineBadge`.
 
-The `skills.service.spec.ts` file ships with `it.skip`'d false-positive cases
-for `findSkillInContext` — un-skip them after wiring up the real matcher.
+`skills.service.spec.ts` covers `findSkillInContext` against the tricky cases:
+`react` vs `reacted`, `go` vs `google`, and `c++` with its punctuation.
 
 ---
 
@@ -171,9 +171,11 @@ for `findSkillInContext` — un-skip them after wiring up the real matcher.
 
 The spec leaves some choices open; here is what JobTrail's MVP committed to.
 
-- **Skill matcher** (`backend/src/skills/skills.service.ts`) ships as a TODO
-  stub with a substring fallback. A real word-boundary / token-aware matcher
-  belongs there.
+- **Skill matcher** (`backend/src/skills/skills.service.ts`) uses alphanumeric
+  lookaround regex (`(?<![A-Za-z0-9])skill(?![A-Za-z0-9])`) instead of `\b`.
+  Word boundaries can't bracket skills like `c++` or `node.js` because `+` and
+  `.` aren't word chars; asserting non-alphanumeric neighbors gives the same
+  semantics for `react` while leaving punctuation-bearing skills alone.
 - **Timeline visual style**: ASCII-fidelity tree (├ / └ in a monospaced font)
   to match REQUIREMENTS.md §8.2 character-for-character.
 - **Deadline urgency**: two tiers — amber ≤7 days, red overdue. No 3-day red
