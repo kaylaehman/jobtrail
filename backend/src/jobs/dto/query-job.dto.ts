@@ -9,6 +9,10 @@ export class QueryJobDto {
   @IsOptional() @IsString()
   company?: string;
 
+  // Filter by FK Company.id — used by the CompanyDetail page to list every app at one company.
+  @IsOptional() @IsString()
+  companyId?: string;
+
   @IsOptional() @IsEnum(JobStatus)
   status?: JobStatus;
 

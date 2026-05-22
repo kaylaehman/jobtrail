@@ -17,6 +17,7 @@ export interface JobsQuery {
   q?: string;
   status?: JobStatus;
   company?: string;
+  companyId?: string;
   tag?: string;
 }
 
@@ -159,6 +160,15 @@ export function useCompanies(params: CompaniesQuery = {}) {
   return useQuery({
     queryKey: ['companies', 'list', params],
     queryFn: async () => (await api.get<CompanyListItem[]>('/companies', { params })).data,
+  });
+}
+
+// Company detail page — fetch by id directly.
+export function useCompany(id: string | undefined) {
+  return useQuery({
+    queryKey: ['companies', id],
+    enabled: Boolean(id),
+    queryFn: async () => (await api.get<Company>(`/companies/${id}`)).data,
   });
 }
 
