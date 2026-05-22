@@ -7,6 +7,7 @@ dist/
 build/
 **/dist/
 **/build/
+*.tsbuildinfo
 
 # logs
 *.log
@@ -20,11 +21,18 @@ yarn-error.log*
 .env.*.local
 *.env
 
-# editors
+# editors / IDE
 .vscode/
 .idea/
+.vs/
 *.swp
+*.swo
+*.suo
+*.user
 .DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
 
 # python
 __pycache__/
@@ -32,12 +40,30 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
 
 # prisma
 backend/prisma/dev.db
 
-# coverage
+# coverage / test artifacts
 coverage/
+.nyc_output/
+playwright-report/
+test-results/
 
-# vite
+# vite / frontend caches
 .vite/
+.cache/
+.parcel-cache/
+
+# claude code / per-user agent state
+.remember/
+.claude/
+
+# misc
+*.tmp
+*.bak
+*.orig
