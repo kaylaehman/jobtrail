@@ -4,6 +4,8 @@ import { CompaniesController } from './companies.controller';
 import { EnrichmentService } from './enrichment/enrichment.service';
 import { EnrichmentHttp } from './enrichment/enrichment-http';
 import { WikipediaSource } from './enrichment/wikipedia.source';
+import { WikidataSource } from './enrichment/wikidata.source';
+import { WikidataClient } from './enrichment/wikidata-client';
 import { ENRICHMENT_SOURCES } from './enrichment/source.interface';
 
 @Module({
@@ -12,13 +14,16 @@ import { ENRICHMENT_SOURCES } from './enrichment/source.interface';
     CompaniesService,
     EnrichmentService,
     EnrichmentHttp,
+    WikidataClient,
     WikipediaSource,
+    WikidataSource,
     // Multi-provider: declaration order here = run order in EnrichmentService.enrich.
-    // Wikidata and EDGAR will be appended in subsequent steps.
+    // Wikipedia first (cheapest, often supplies the QID Wikidata then reuses), Wikidata second.
+    // EDGAR will be appended in step 4.
     {
       provide: ENRICHMENT_SOURCES,
-      useFactory: (wp: WikipediaSource) => [wp],
-      inject: [WikipediaSource],
+      useFactory: (wp: WikipediaSource, wd: WikidataSource) => [wp, wd],
+      inject: [WikipediaSource, WikidataSource],
     },
   ],
   exports: [CompaniesService],
