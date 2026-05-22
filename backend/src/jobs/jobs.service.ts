@@ -49,7 +49,7 @@ export class JobsService {
   async create(dto: CreateJobDto) {
     const data = this.toPrismaData(dto);
     if (dto.description) {
-      data.extractedSkills = this.skills.extract(dto.description);
+      data.extractedSkills = this.skills.extract(dto.description) as unknown as Prisma.InputJsonValue;
     }
     return this.prisma.jobApplication.create({ data, include: { rounds: true } });
   }
@@ -59,7 +59,7 @@ export class JobsService {
     const data = this.toPrismaData(dto);
     if (dto.description !== undefined) {
       data.extractedSkills = dto.description
-        ? this.skills.extract(dto.description)
+        ? (this.skills.extract(dto.description) as unknown as Prisma.InputJsonValue)
         : Prisma.DbNull;
     }
     return this.prisma.jobApplication.update({
@@ -82,7 +82,7 @@ export class JobsService {
     }
     const data = this.toPrismaData(dto);
     if (dto.description) {
-      data.extractedSkills = this.skills.extract(dto.description);
+      data.extractedSkills = this.skills.extract(dto.description) as unknown as Prisma.InputJsonValue;
     }
     return this.prisma.jobApplication.upsert({
       where: {
