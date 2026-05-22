@@ -7,6 +7,7 @@ import { JobForm } from './pages/JobForm';
 import { Settings } from './pages/Settings';
 import { Companies } from './pages/Companies';
 import { CompanyDetail } from './pages/CompanyDetail';
+import { Activity } from './pages/Activity';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/discover" element={<Discover />} />
         <Route path="/companies" element={<Companies />} />
         <Route path="/companies/:id" element={<CompanyDetail />} />
+        <Route path="/activity" element={<Activity />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/jobs/new" element={<JobForm mode="create" />} />
         <Route path="/jobs/:id" element={<JobDetail />} />

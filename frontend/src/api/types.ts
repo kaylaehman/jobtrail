@@ -87,6 +87,36 @@ export interface JobStatusEvent {
   createdAt: string;
 }
 
+export interface JobNote {
+  id: string;
+  jobApplicationId: string;
+  body: string;
+  createdAt: string;
+}
+
+// Activity feed item — discriminated union over status events + notes. Denormalized
+// jobCompany/jobPosition so the feed renders without an N+1 of job lookups.
+export type ActivityItem =
+  | {
+      type: 'status';
+      id: string;
+      jobApplicationId: string;
+      jobCompany: string;
+      jobPosition: string;
+      fromStatus: JobStatus | null;
+      toStatus: JobStatus;
+      createdAt: string;
+    }
+  | {
+      type: 'note';
+      id: string;
+      jobApplicationId: string;
+      jobCompany: string;
+      jobPosition: string;
+      body: string;
+      createdAt: string;
+    };
+
 export interface ExtractedSkills {
   skills: {
     languages: string[];
@@ -124,6 +154,7 @@ export interface JobApplication {
   rounds: InterviewRound[];
   // Only populated by GET /jobs/:id (detail), not by GET /jobs (list) — guard with ?? [] at usage.
   statusEvents?: JobStatusEvent[];
+  notes?: JobNote[];
   companyId: string | null;
   companyMatchStatus: CompanyMatchStatus;
 }

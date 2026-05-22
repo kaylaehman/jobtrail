@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import type {
+  ActivityItem,
   Company,
   CompanyListItem,
   DiscoverResult,
   ExtractedSkills,
   InterviewRound,
   JobApplication,
+  JobNote,
   JobStatus,
   JobType,
   ResetSummary,
@@ -92,6 +94,37 @@ export function useDeleteRound(jobId: string) {
     mutationFn: async (roundId: string) =>
       (await api.delete(`/jobs/${jobId}/rounds/${roundId}`)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['jobs', jobId] }),
+  });
+}
+
+export function useCreateNote(jobId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: string) =>
+      (await api.post<JobNote>(`/jobs/${jobId}/notes`, { body })).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jobs', jobId] });
+      qc.invalidateQueries({ queryKey: ['activity'] });
+    },
+  });
+}
+
+export function useDeleteNote(jobId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (noteId: string) =>
+      (await api.delete(`/jobs/${jobId}/notes/${noteId}`)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jobs', jobId] });
+      qc.invalidateQueries({ queryKey: ['activity'] });
+    },
+  });
+}
+
+export function useActivity() {
+  return useQuery({
+    queryKey: ['activity'],
+    queryFn: async () => (await api.get<ActivityItem[]>('/jobs/activity')).data,
   });
 }
 

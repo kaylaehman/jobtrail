@@ -8,10 +8,11 @@ import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
 
 // Detail-page `include` shared by every method that returns a full application.
-// statusEvents come back newest-first so the timeline doesn't need to reverse client-side.
+// statusEvents + notes come back newest-first so timelines don't need to reverse client-side.
 const JOB_DETAIL_INCLUDE = {
   rounds: { orderBy: { roundNumber: 'asc' } },
   statusEvents: { orderBy: { createdAt: 'desc' } },
+  notes: { orderBy: { createdAt: 'desc' } },
 } satisfies Prisma.JobApplicationInclude;
 
 @Injectable()
@@ -135,6 +136,76 @@ export class JobsService {
     await this.findOne(id);
     await this.prisma.jobApplication.delete({ where: { id } });
     return { deleted: true };
+  }
+
+  async createNote(jobId: string, body: string) {
+    await this.findOne(jobId);
+    return this.prisma.jobNote.create({ data: { jobApplicationId: jobId, body } });
+  }
+
+  async deleteNote(jobId: string, noteId: string) {
+    // Scope the delete to (jobId, noteId) so a request can't nuke a note across applications.
+    const result = await this.prisma.jobNote.deleteMany({
+      where: { id: noteId, jobApplicationId: jobId },
+    });
+    return { deleted: result.count };
+  }
+
+  // Merged feed of status transitions + user notes across every application, newest first.
+  // Denormalizes job company/position onto each item so the UI can render contextually
+  // without an N+1 of job lookups. Capped at 500 items to keep payloads sane; pagination
+  // can come later if the feed actually grows that big.
+  async getActivity() {
+    const select = {
+      id: true,
+      jobApplicationId: true,
+      createdAt: true,
+      jobApplication: { select: { id: true, company: true, position: true } },
+    } as const;
+    const [events, notes] = await Promise.all([
+      this.prisma.jobStatusEvent.findMany({
+        select: { ...select, fromStatus: true, toStatus: true },
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+      }),
+      this.prisma.jobNote.findMany({
+        select: { ...select, body: true },
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+      }),
+    ]);
+    type Item =
+      | {
+          type: 'status'; id: string; jobApplicationId: string; jobCompany: string;
+          jobPosition: string; fromStatus: string | null; toStatus: string; createdAt: string;
+        }
+      | {
+          type: 'note'; id: string; jobApplicationId: string; jobCompany: string;
+          jobPosition: string; body: string; createdAt: string;
+        };
+    const items: Item[] = [
+      ...events.map((e) => ({
+        type: 'status' as const,
+        id: e.id,
+        jobApplicationId: e.jobApplicationId,
+        jobCompany: e.jobApplication.company,
+        jobPosition: e.jobApplication.position,
+        fromStatus: e.fromStatus,
+        toStatus: e.toStatus,
+        createdAt: e.createdAt.toISOString(),
+      })),
+      ...notes.map((n) => ({
+        type: 'note' as const,
+        id: n.id,
+        jobApplicationId: n.jobApplicationId,
+        jobCompany: n.jobApplication.company,
+        jobPosition: n.jobApplication.position,
+        body: n.body,
+        createdAt: n.createdAt.toISOString(),
+      })),
+    ];
+    items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return items.slice(0, 500);
   }
 
   // Used by DiscoverService.import after CompaniesService resolves a row for the imported

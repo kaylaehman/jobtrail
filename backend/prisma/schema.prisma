@@ -90,6 +90,7 @@ model JobApplication {
 
   rounds           InterviewRound[]
   statusEvents     JobStatusEvent[]
+  notes            JobNote[]
   // `company` (string) stays as the import-time snapshot; `companyEntity` is the enriched profile.
   // FK is ON DELETE SET NULL so pruning a Company row never cascades into application loss.
   companyEntity    Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
@@ -181,6 +182,20 @@ model JobStatusEvent {
 
   @@index([jobApplicationId, createdAt])
   @@map("job_status_events")
+}
+
+// Free-form user notes attached to an application. Pairs with JobStatusEvent in the activity
+// feed — events come from the system (status transitions), notes come from the user.
+model JobNote {
+  id               String         @id @default(cuid())
+  jobApplicationId String         @map("job_application_id")
+  body             String         @db.Text
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  jobApplication   JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([jobApplicationId, createdAt])
+  @@map("job_notes")
 }
 
 model InterviewRound {

@@ -12,6 +12,7 @@ import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { QueryJobDto } from './dto/query-job.dto';
+import { CreateNoteDto } from './dto/create-note.dto';
 import { QidDto } from '../companies/dto/company.dto';
 
 @Controller('jobs')
@@ -21,6 +22,12 @@ export class JobsController {
   @Get()
   list(@Query() q: QueryJobDto) {
     return this.jobs.list(q);
+  }
+
+  // Defined BEFORE @Get(':id') so the route doesn't get swallowed by the param matcher.
+  @Get('activity')
+  activity() {
+    return this.jobs.getActivity();
   }
 
   @Get(':id')
@@ -48,5 +55,15 @@ export class JobsController {
   @Post(':id/link-company')
   linkCompany(@Param('id') id: string, @Body() dto: QidDto) {
     return this.jobs.linkCompany(id, dto.qid);
+  }
+
+  @Post(':id/notes')
+  createNote(@Param('id') id: string, @Body() dto: CreateNoteDto) {
+    return this.jobs.createNote(id, dto.body);
+  }
+
+  @Delete(':id/notes/:noteId')
+  deleteNote(@Param('id') id: string, @Param('noteId') noteId: string) {
+    return this.jobs.deleteNote(id, noteId);
   }
 }

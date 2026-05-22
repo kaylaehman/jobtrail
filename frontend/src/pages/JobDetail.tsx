@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
+  useCreateNote,
   useCreateRound,
   useDeleteJob,
+  useDeleteNote,
   useDeleteRound,
   useJob,
   useUpdateJob,
@@ -32,8 +34,11 @@ export function JobDetail() {
   const createRound = useCreateRound(id ?? '');
   const updateRound = useUpdateRound(id ?? '');
   const deleteRound = useDeleteRound(id ?? '');
+  const createNote = useCreateNote(id ?? '');
+  const deleteNote = useDeleteNote(id ?? '');
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
+  const [newNoteDraft, setNewNoteDraft] = useState('');
   const { formatDate } = useAppSettings();
 
   if (isLoading || !job) return <div className="text-slate-400">Loading…</div>;
@@ -101,6 +106,53 @@ export function JobDetail() {
       </div>
 
       <CompanyPanel jobId={job.id} matchStatus={job.companyMatchStatus} />
+
+      <div className="card p-4 space-y-3">
+        <h2 className="text-lg font-semibold">Notes</h2>
+        <div className="space-y-2">
+          <textarea
+            className="input min-h-[5rem]"
+            placeholder="Recruiter said they'll get back next week. Spoke with hiring manager about team structure. Etc."
+            value={newNoteDraft}
+            onChange={(e) => setNewNoteDraft(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!newNoteDraft.trim() || createNote.isPending}
+            onClick={async () => {
+              await createNote.mutateAsync(newNoteDraft.trim());
+              setNewNoteDraft('');
+            }}
+          >
+            {createNote.isPending ? 'Saving…' : '+ Add note'}
+          </button>
+        </div>
+        {job.notes && job.notes.length > 0 && (
+          <ol className="space-y-2 pt-1">
+            {job.notes.map((n) => (
+              <li
+                key={n.id}
+                className="group border-l-2 border-slate-700 pl-3 py-1 hover:border-brand-sky"
+              >
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <time>{formatDate(n.createdAt)}</time>
+                  <button
+                    type="button"
+                    className="invisible group-hover:visible hover:text-rejected"
+                    onClick={() => {
+                      if (confirm('Delete this note?')) deleteNote.mutate(n.id);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+                <p className="text-sm text-slate-200 whitespace-pre-wrap mt-0.5">{n.body}</p>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
 
       <div className="card p-4 space-y-3">
         <h2 className="text-lg font-semibold">Status history</h2>
