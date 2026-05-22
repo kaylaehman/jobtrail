@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useDiscoverImport, useDiscoverSearch } from '../api/hooks';
+import { useDiscoverImport, useDiscoverSearch, type DiscoverSearchInput } from '../api/hooks';
 import { formatSalaryRange, isJobType } from '../lib/format';
 import type { DiscoverResult } from '../api/types';
 
@@ -14,16 +14,18 @@ const JOB_TYPES = [
   { value: 'internship', label: 'Internship' },
 ] as const;
 
+// Fixed page size — replaces the old user-facing "Results wanted" input. Pagination is now
+// the affordance for "show me more"; 25 keeps the table digestible while still covering most
+// fruitful searches in a couple of clicks.
+const PAGE_SIZE = 25;
+
 export function Discover() {
   const [sites, setSites] = useState<string[]>(['linkedin', 'indeed']);
   const [searchTerm, setSearchTerm] = useState('software engineer');
   const [location, setLocation] = useState('Remote');
-  const [resultsWanted, setResultsWanted] = useState(25);
   const [hoursOld, setHoursOld] = useState<number | ''>(72);
   const [isRemote, setIsRemote] = useState(true);
   const [jobType, setJobType] = useState<string>('');
-  // Client-side noise filtering — applied to the returned list, doesn't change the upstream
-  // search. Cheap way to suppress "Cloud Architect" when you searched "Junior Architect".
   const [includeKeywords, setIncludeKeywords] = useState('');
   const [excludeKeywords, setExcludeKeywords] = useState('');
 
@@ -31,39 +33,66 @@ export function Discover() {
   const importJob = useDiscoverImport();
   const [importedIds, setImportedIds] = useState<Set<string>>(new Set());
 
+  // Pagination state. results accumulates across "Load more" clicks; page tracks the next
+  // offset to request. exhausted flips true once a page comes back with fewer than PAGE_SIZE
+  // hits (the upstream is out of matches for these filters), and we hide the Load more button.
+  const [results, setResults] = useState<DiscoverResult[]>([]);
+  const [page, setPage] = useState(0);
+  const [cached, setCached] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
+
   const toggleSite = (s: string) =>
     setSites((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
-  const runSearch = () => {
-    search.mutate({
-      sites,
-      searchTerm,
-      location: location || undefined,
-      resultsWanted,
-      hoursOld: hoursOld === '' ? undefined : hoursOld,
-      isRemote,
-      jobType: jobType || undefined,
-    });
+  const buildParams = (offset: number): DiscoverSearchInput => ({
+    sites,
+    searchTerm,
+    location: location || undefined,
+    resultsWanted: PAGE_SIZE,
+    offset,
+    hoursOld: hoursOld === '' ? undefined : hoursOld,
+    isRemote,
+    jobType: jobType || undefined,
+  });
+
+  const runSearch = async () => {
+    const response = await search.mutateAsync(buildParams(0));
+    setResults(response.results);
+    setPage(1);
+    setCached(response.cached);
+    setExhausted(response.results.length < PAGE_SIZE);
   };
 
-  // Filter results client-side. Matches title + company + description (lowercased) against
-  // comma-separated keyword lists. Excludes win — if any exclude term hits, the row is hidden
-  // even when it also matches an include term. Empty filters are pass-throughs.
+  const loadMore = async () => {
+    const response = await search.mutateAsync(buildParams(page * PAGE_SIZE));
+    // Dedup by (site, id) — JobSpy occasionally repeats a row across offsets, and React would
+    // throw a duplicate-key warning if we let it through.
+    setResults((prev) => {
+      const seen = new Set(prev.map((p) => `${p.site}-${p.id}`));
+      const next = response.results.filter((r) => !seen.has(`${r.site}-${r.id}`));
+      return [...prev, ...next];
+    });
+    setPage((p) => p + 1);
+    setCached(response.cached);
+    setExhausted(response.results.length < PAGE_SIZE);
+  };
+
+  // Filter the accumulated results client-side. Matches title + company + description
+  // (lowercased) against comma-separated keyword lists. Excludes win.
   const filteredResults = useMemo(() => {
-    if (!search.data?.results) return [];
     const includes = includeKeywords
       .toLowerCase().split(',').map((s) => s.trim()).filter(Boolean);
     const excludes = excludeKeywords
       .toLowerCase().split(',').map((s) => s.trim()).filter(Boolean);
-    if (includes.length === 0 && excludes.length === 0) return search.data.results;
-    return search.data.results.filter((r) => {
+    if (includes.length === 0 && excludes.length === 0) return results;
+    return results.filter((r) => {
       const haystack = `${r.title ?? ''} ${r.company ?? ''} ${r.description ?? ''}`.toLowerCase();
       if (excludes.some((kw) => haystack.includes(kw))) return false;
       if (includes.length > 0 && !includes.some((kw) => haystack.includes(kw))) return false;
       return true;
     });
-  }, [search.data, includeKeywords, excludeKeywords]);
-  const hiddenCount = (search.data?.results.length ?? 0) - filteredResults.length;
+  }, [results, includeKeywords, excludeKeywords]);
+  const hiddenCount = results.length - filteredResults.length;
 
   const handleImport = async (r: DiscoverResult) => {
     if (!r.company || !r.title) return;
@@ -79,13 +108,13 @@ export function Discover() {
       salaryCurrency: r.currency ?? undefined,
       remote: r.is_remote ?? undefined,
       description: r.description ?? undefined,
-      // JobSpy returns job_type as a string (sometimes hyphenated, sometimes null). Only forward
-      // when it matches our enum exactly — anything else gets stored as null and the user can
-      // edit it via JobForm if they care.
       jobType: isJobType(r.job_type) ? r.job_type : undefined,
     });
     setImportedIds((prev) => new Set(prev).add(r.id));
   };
+
+  const hasResults = results.length > 0;
+  const initialSearch = !hasResults && search.isPending;
 
   return (
     <div className="space-y-4">
@@ -109,7 +138,7 @@ export function Discover() {
             </label>
           ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <label className="text-xs font-medium text-slate-300">
             Search term
             <input
@@ -126,17 +155,6 @@ export function Discover() {
               placeholder="e.g. Remote or Boston, MA"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-            />
-          </label>
-          <label className="text-xs font-medium text-slate-300">
-            Results wanted
-            <input
-              className="input mt-1"
-              type="number"
-              min={1}
-              max={200}
-              value={resultsWanted}
-              onChange={(e) => setResultsWanted(parseInt(e.target.value || '25', 10))}
             />
           </label>
           <label className="text-xs font-medium text-slate-300">
@@ -188,14 +206,15 @@ export function Discover() {
             <input type="checkbox" checked={isRemote} onChange={(e) => setIsRemote(e.target.checked)} /> Remote only
           </label>
           <button className="btn btn-primary" onClick={runSearch} disabled={search.isPending || sites.length === 0}>
-            {search.isPending ? 'Searching…' : 'Search'}
+            {initialSearch ? 'Searching…' : 'Search'}
           </button>
-          {search.data && (
+          {hasResults && (
             <span className="text-xs text-slate-400">
               {hiddenCount > 0
-                ? `Showing ${filteredResults.length} of ${search.data.count} (${hiddenCount} hidden by filter)`
-                : `${search.data.count} result${search.data.count === 1 ? '' : 's'}`}
-              {search.data.cached ? ' · cached' : ''}
+                ? `Showing ${filteredResults.length} of ${results.length} loaded (${hiddenCount} hidden by filter)`
+                : `${results.length} loaded`}
+              {cached ? ' · cached' : ''}
+              {exhausted ? ' · all results loaded' : ''}
             </span>
           )}
         </div>
@@ -207,9 +226,9 @@ export function Discover() {
         </div>
       )}
 
-      {search.data && search.data.results.length > 0 && filteredResults.length === 0 && (
+      {hasResults && filteredResults.length === 0 && (
         <div className="card p-4 text-sm text-slate-400">
-          All {search.data.count} result{search.data.count === 1 ? '' : 's'} were hidden by the include/exclude filter.
+          All {results.length} loaded result{results.length === 1 ? '' : 's'} were hidden by the include/exclude filter.
           Loosen the keywords above.
         </div>
       )}
@@ -259,6 +278,18 @@ export function Discover() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {hasResults && !exhausted && (
+        <div className="flex justify-center">
+          <button
+            className="btn btn-accent"
+            onClick={loadMore}
+            disabled={search.isPending}
+          >
+            {search.isPending ? 'Loading…' : `Load more (next ${PAGE_SIZE})`}
+          </button>
         </div>
       )}
     </div>

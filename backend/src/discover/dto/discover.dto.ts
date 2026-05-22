@@ -36,6 +36,10 @@ export class DiscoverSearchDto {
   @IsOptional() @IsInt() @Min(1) @Max(200)
   resultsWanted?: number;
 
+  // For the frontend "Load more" pagination — skip the first N results.
+  @IsOptional() @IsInt() @Min(0)
+  offset?: number;
+
   @IsOptional() @IsInt() @Min(1)
   hoursOld?: number;
 

@@ -140,6 +140,7 @@ export interface DiscoverSearchInput {
   searchTerm: string;
   location?: string;
   resultsWanted?: number;
+  offset?: number;
   hoursOld?: number;
   isRemote?: boolean;
   jobType?: string;

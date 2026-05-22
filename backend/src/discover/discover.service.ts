@@ -45,6 +45,7 @@ export class DiscoverService {
           search_term: dto.searchTerm,
           location: dto.location,
           results_wanted: dto.resultsWanted ?? 25,
+          offset: dto.offset ?? 0,
           hours_old: dto.hoursOld,
           is_remote: dto.isRemote,
           job_type: dto.jobType,

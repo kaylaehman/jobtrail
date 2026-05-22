@@ -38,6 +38,9 @@ class SearchRequest(BaseModel):
     search_term: str
     location: Optional[str] = None
     results_wanted: int = 25
+    # Skip the first N results — used by the frontend's "Load more" pagination so a single
+    # logical search can pull pages 0, 25, 50, … without rerunning everything from scratch.
+    offset: int = 0
     hours_old: Optional[int] = None
     is_remote: Optional[bool] = None
     job_type: Optional[str] = None  # "fulltime" | "parttime" | "contract" | "internship"
@@ -84,6 +87,7 @@ def _cache_key(req: SearchRequest) -> str:
             req.search_term.lower().strip(),
             (req.location or "").lower().strip(),
             str(req.results_wanted),
+            str(req.offset),
             str(req.hours_old),
             str(req.is_remote),
             str(req.job_type),
@@ -123,6 +127,7 @@ def search(req: SearchRequest):
             search_term=req.search_term,
             location=req.location,
             results_wanted=req.results_wanted,
+            offset=req.offset,
             hours_old=req.hours_old,
             is_remote=req.is_remote,
             job_type=req.job_type,
