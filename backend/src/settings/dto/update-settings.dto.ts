@@ -1,4 +1,4 @@
-import { IsArray, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsIn, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 // Whitelisted date format tokens — kept narrow on purpose so the frontend dropdown
 // and backend stay in lockstep. Add new options here when adding to the dropdown.
@@ -23,4 +23,10 @@ export class UpdateSettingsDto {
   @IsArray()
   @IsString({ each: true })
   recentTags?: string[];
+
+  // Empty-string "clears" the field; otherwise must be a real email so SEC EDGAR doesn't 403.
+  @IsOptional()
+  @ValidateIf((_, value) => value !== '')
+  @IsEmail()
+  contactEmail?: string;
 }

@@ -1,7 +1,13 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import clsx from 'clsx';
+import { useAppSettings } from '../lib/settings-context';
 
 export function Layout() {
+  const { settings } = useAppSettings();
+  // Banner persists across every page until the user fills in their contact email — required
+  // by SEC EDGAR's fair-use policy. Hidden while settings are still loading to avoid a flash.
+  const needsContactEmail = Boolean(settings && !settings.contactEmail);
+
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     clsx(
       'px-3 py-1.5 rounded-md text-sm font-medium transition',
@@ -30,6 +36,23 @@ export function Layout() {
           </nav>
         </div>
       </header>
+      {needsContactEmail && (
+        <div className="bg-amber-900/40 border-b border-amber-700/60 text-amber-100">
+          <div className="mx-auto max-w-6xl px-4 py-2 text-sm flex flex-wrap items-center gap-2">
+            <span aria-hidden>⚠</span>
+            <span>
+              Company enrichment is blocked — SEC EDGAR requires a contact email in our API
+              requests.
+            </span>
+            <Link
+              to="/settings#contact-email"
+              className="font-semibold underline hover:no-underline"
+            >
+              Set it in Settings →
+            </Link>
+          </div>
+        </div>
+      )}
       <main className="mx-auto max-w-6xl px-4 py-6">
         <Outlet />
       </main>

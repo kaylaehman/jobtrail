@@ -11,6 +11,7 @@ interface SettingsContextValue {
   // Falls back to yyyy-MM-dd while settings are still loading so the UI never flashes raw ISO.
   formatDate: (iso: string | null | undefined) => string;
   setDateFormat: (fmt: DateFormatOption) => Promise<void>;
+  setContactEmail: (email: string) => Promise<void>;
   recordTags: (tags: string[]) => Promise<void>;
 }
 
@@ -34,6 +35,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     [update],
   );
 
+  const setContactEmail = useCallback(
+    async (email: string) => {
+      await update.mutateAsync({ contactEmail: email });
+    },
+    [update],
+  );
+
   const recordTags = useCallback(
     async (tags: string[]) => {
       const clean = tags.map((t) => t.trim()).filter(Boolean);
@@ -53,8 +61,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<SettingsContextValue>(
-    () => ({ settings: data, isLoading, formatDate, setDateFormat, recordTags }),
-    [data, isLoading, formatDate, setDateFormat, recordTags],
+    () => ({ settings: data, isLoading, formatDate, setDateFormat, setContactEmail, recordTags }),
+    [data, isLoading, formatDate, setDateFormat, setContactEmail, recordTags],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

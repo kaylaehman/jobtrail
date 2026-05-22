@@ -98,6 +98,9 @@ model UserSettings {
   id          String   @id @default("default")
   dateFormat  String   @default("yyyy-MM-dd") @map("date_format")
   recentTags  String[] @default([])           @map("recent_tags")
+  // Surfaced to SEC EDGAR's User-Agent so they have a real contact for our traffic.
+  // Without it, requests get 403'd. Frontend shows a banner until this is set.
+  contactEmail String? @map("contact_email")
   updatedAt   DateTime @updatedAt             @map("updated_at")
 
   @@map("user_settings")

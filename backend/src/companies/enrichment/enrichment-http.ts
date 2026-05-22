@@ -20,12 +20,11 @@ const DEFAULT_CONFIG: HostConfig = { minGapMs: 100, maxConcurrent: 4 };
 
 // SEC EDGAR's fair-use policy (https://www.sec.gov/os/accessing-edgar-data) requires the
 // User-Agent to include a contact email so they can reach you about abusive traffic. Without
-// it they 403. Wikidata's policy is similar but less strict. JOBTRAIL_CONTACT_EMAIL lets the
-// operator override; the fallback uses the GitHub-provided no-reply email, which is a real
-// deliverable address that forwards to the project owner.
-const CONTACT_EMAIL =
-  process.env.JOBTRAIL_CONTACT_EMAIL || '177765088+kaylaehman@users.noreply.github.com';
-const USER_AGENT = `JobTrail/0.1 ${CONTACT_EMAIL} (https://github.com/kaylaehman/jobtrail)`;
+// it they 403. Wikidata's policy is similar but less strict.
+//
+// Resolution order on every request: UserSettings.contactEmail (DB) > JOBTRAIL_CONTACT_EMAIL
+// env var > unset (UA omits the email and EDGAR will 403 — frontend banner tells the user
+// to set it). One extra DB lookup per HTTP call is fine for a single-user app.
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 @Injectable()
@@ -50,8 +49,9 @@ export class EnrichmentHttp {
     const host = new URL(url).host;
     await this.acquireSlot(host);
     try {
+      const userAgent = await this.buildUserAgent();
       const cfg: AxiosRequestConfig = {
-        headers: { 'User-Agent': USER_AGENT, Accept: 'application/json', ...opts.headers },
+        headers: { 'User-Agent': userAgent, Accept: 'application/json', ...opts.headers },
         timeout: 30_000,
         // Treat 4xx as a real response (some sources handle 404 themselves); throw on 5xx.
         validateStatus: (s) => s < 500,
@@ -90,6 +90,14 @@ export class EnrichmentHttp {
     const q = this.waiters.get(host);
     const next = q?.shift();
     next?.();
+  }
+
+  private async buildUserAgent(): Promise<string> {
+    const settings = await this.prisma.userSettings.findUnique({ where: { id: 'default' } });
+    const email = settings?.contactEmail || process.env.JOBTRAIL_CONTACT_EMAIL || null;
+    return email
+      ? `JobTrail/0.1 ${email} (https://github.com/kaylaehman/jobtrail)`
+      : 'JobTrail/0.1 (https://github.com/kaylaehman/jobtrail)';
   }
 
   private async readCache<T>(url: string): Promise<T | null> {

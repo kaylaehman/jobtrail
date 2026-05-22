@@ -147,6 +147,9 @@ export interface UserSettings {
   id: string;
   dateFormat: DateFormatOption;
   recentTags: string[];
+  // Used in upstream API User-Agents (SEC EDGAR's policy requires a real contact).
+  // Null until the user fills it in; a banner on every page prompts for it while unset.
+  contactEmail: string | null;
   updatedAt: string;
 }
 
