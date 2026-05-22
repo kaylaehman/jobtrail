@@ -19,6 +19,11 @@
 #   POSTGRES_PASSWORD            strong password for the embedded postgres
 #   JOBSPY_PROXIES               (optional) comma-sep proxy list for python-jobspy
 #   JOBTRAIL_FRONTEND_PORT       (optional, default 3000) host port the tunnel hits
+#   JOBTRAIL_IMAGE_NAMESPACE     (optional, default "kaylaehman") Docker Hub user/org that owns
+#                                 the published images. Change if you forked + republish under
+#                                 your own Docker Hub account.
+#   JOBTRAIL_IMAGE_TAG           (optional, default "latest") which image tag to pull. Pin to
+#                                 a specific sha-<commit> tag to roll back.
 
 services:
   db:
@@ -37,8 +42,7 @@ services:
       retries: 10
 
   jobspy:
-    build:
-      context: ./jobspy-service
+    image: ${JOBTRAIL_IMAGE_NAMESPACE:-kaylaehman}/jobtrail-jobspy:${JOBTRAIL_IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       JOBSPY_CACHE_TTL: ${JOBSPY_CACHE_TTL:-600}
@@ -47,8 +51,7 @@ services:
       - "8001"
 
   backend:
-    build:
-      context: ./backend
+    image: ${JOBTRAIL_IMAGE_NAMESPACE:-kaylaehman}/jobtrail-backend:${JOBTRAIL_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       db:
@@ -65,11 +68,9 @@ services:
       - "8000"
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        # Empty => the React bundle uses relative /api/ URLs => frontend nginx proxies to backend.
-        VITE_API_URL: ""
+    # Frontend is built with VITE_API_URL="" at CI time so the React bundle uses relative
+    # /api/ URLs that the frontend's nginx proxies to the backend (see .github/workflows).
+    image: ${JOBTRAIL_IMAGE_NAMESPACE:-kaylaehman}/jobtrail-frontend:${JOBTRAIL_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       - backend

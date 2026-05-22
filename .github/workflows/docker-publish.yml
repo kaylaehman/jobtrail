@@ -1,0 +1,82 @@
+name: Docker publish
+
+# Build all three JobTrail images (backend, frontend, jobspy) and push to Docker Hub on every
+# push to main. Multi-arch (amd64 + arm64) so the same images work on Intel/AMD homelabs and
+# ARM SBCs without a second pipeline.
+#
+# Setup (one-time): add these secrets in GitHub → Settings → Secrets and variables → Actions
+#   DOCKERHUB_USERNAME   — your Docker Hub handle (also becomes the image namespace)
+#   DOCKERHUB_TOKEN      — a Docker Hub access token (NOT your password)
+#       Create at hub.docker.com/settings/security → New Access Token → Read+Write scope.
+#
+# After the first successful run, three repositories appear under your Docker Hub account:
+#   <username>/jobtrail-backend
+#   <username>/jobtrail-frontend
+#   <username>/jobtrail-jobspy
+# Each tagged `latest` + `sha-<short-commit>`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      # Don't bail on one service failing — let the others publish so a partial deploy is
+      # still useful while the failure is investigated.
+      fail-fast: false
+      matrix:
+        service:
+          - name: backend
+            context: ./backend
+          - name: frontend
+            context: ./frontend
+          - name: jobspy
+            context: ./jobspy-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Required for multi-arch — emulates the non-native architecture during build.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jobtrail-${{ matrix.service.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Frontend uses VITE_API_URL at build time. Pass empty so the React bundle issues
+          # /api/... requests that the frontend nginx then proxies to the backend container.
+          # Other Dockerfiles ignore unknown build args, so this is safe to set globally.
+          build-args: |
+            VITE_API_URL=
+          # Pull/push the Buildx layer cache through GitHub Actions cache so subsequent runs
+          # skip layers that haven't changed. Big speed-up on incremental commits.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -357,10 +357,23 @@ In the **Environment variables** section of the stack form:
 | `POSTGRES_USER`           | optional  | Default `jobtrail`.                                         |
 | `POSTGRES_DB`             | optional  | Default `jobtrail`.                                         |
 | `JOBSPY_CACHE_TTL`        | optional  | Default `600` seconds.                                      |
+| `JOBTRAIL_IMAGE_NAMESPACE`| optional  | Docker Hub user/org that owns the published images. Default `kaylaehman`. Change if you forked and republish under your own account. |
+| `JOBTRAIL_IMAGE_TAG`      | optional  | Default `latest`. Pin to a `sha-<commit>` tag to roll back. |
 
-Click **Deploy the stack**. The first deploy builds three images on the
-homelab host (5–10 minutes); subsequent redeploys are much faster thanks to
-Docker layer caching.
+Click **Deploy the stack**. The Portainer compose file references pre-built
+multi-arch images from Docker Hub (`kaylaehman/jobtrail-{backend,frontend,jobspy}`),
+so the first deploy just **pulls** rather than building from source — typically
+under a minute. The images themselves are produced by the `.github/workflows/docker-publish.yml`
+GitHub Action on every push to `main`.
+
+If you've forked the repo and want to publish under your own Docker Hub account:
+
+1. Create a Docker Hub access token with **Read+Write** scope at <https://hub.docker.com/settings/security>.
+2. Add two GitHub secrets to your fork (Settings → Secrets and variables → Actions):
+   - `DOCKERHUB_USERNAME` — your Docker Hub handle
+   - `DOCKERHUB_TOKEN` — the token from step 1
+3. Push any change to `main` to trigger the workflow. After it succeeds, three repositories appear under your Docker Hub account.
+4. Set `JOBTRAIL_IMAGE_NAMESPACE=<your-handle>` in the Portainer stack env vars.
 
 ### 4. Verify
 
