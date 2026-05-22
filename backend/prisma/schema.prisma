@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobSource {
+  manual
+  linkedin
+  indeed
+  glassdoor
+  google
+  ziprecruiter
+}
+
+enum JobStatus {
+  saved
+  applied
+  phone_screen
+  interview
+  offer
+  rejected
+  withdrawn
+}
+
+enum RoundType {
+  online_assessment
+  hr_screen
+  technical
+  manager
+  final
+  other
+}
+
+enum RoundStatus {
+  scheduled
+  completed
+  passed
+  rejected
+  waiting
+}
+
+model JobApplication {
+  id               String      @id @default(cuid())
+  company          String
+  position         String
+  source           JobSource   @default(manual)
+  sourceJobId      String?     @map("source_job_id")
+  jobUrl           String?     @map("job_url")
+  location         String?
+  salaryMin        Int?        @map("salary_min")
+  salaryMax        Int?        @map("salary_max")
+  salaryCurrency   String?     @map("salary_currency")
+  remote           Boolean     @default(false)
+  description      String?     @db.Text
+  status           JobStatus   @default(saved)
+  appliedAt        DateTime?   @map("applied_at")
+  deadline         DateTime?
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  tags             String[]    @default([])
+  extractedSkills  Json?       @map("extracted_skills")
+
+  rounds           InterviewRound[]
+
+  // NULL source_job_id (manual entries) does not conflict under Postgres NULL-distinct semantics.
+  @@unique([source, sourceJobId], name: "source_sourceJobId_unique")
+  @@index([status])
+  @@index([company])
+  @@map("job_applications")
+}
+
+model InterviewRound {
+  id                 String       @id @default(cuid())
+  jobApplicationId   String       @map("job_application_id")
+  roundNumber        Int          @map("round_number")
+  type               RoundType    @default(other)
+  scheduledAt        DateTime?    @map("scheduled_at")
+  durationMinutes    Int?         @map("duration_minutes")
+  interviewer        String?
+  status             RoundStatus  @default(scheduled)
+  notes              String?      @db.Text
+  createdAt          DateTime     @default(now()) @map("created_at")
+
+  jobApplication     JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+
+  @@unique([jobApplicationId, roundNumber])
+  @@index([jobApplicationId])
+  @@map("interview_rounds")
+}
