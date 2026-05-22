@@ -38,6 +38,16 @@ export interface InterviewRound {
   createdAt: string;
 }
 
+export interface JobStatusEvent {
+  id: string;
+  jobApplicationId: string;
+  // null = initial creation marker. Render as "Created as X" rather than "X → Y".
+  fromStatus: JobStatus | null;
+  toStatus: JobStatus;
+  note: string | null;
+  createdAt: string;
+}
+
 export interface ExtractedSkills {
   skills: {
     languages: string[];
@@ -73,6 +83,16 @@ export interface JobApplication {
   tags: string[];
   extractedSkills: ExtractedSkills | null;
   rounds: InterviewRound[];
+  // Only populated by GET /jobs/:id (detail), not by GET /jobs (list) — guard with ?? [] at usage.
+  statusEvents?: JobStatusEvent[];
+}
+
+export interface ResetSummary {
+  jobApplications: number;
+  interviewRounds: number;
+  jobStatusEvents: number;
+  companies: number;
+  enrichmentCacheCleared: number;
 }
 
 export const DATE_FORMAT_OPTIONS = [

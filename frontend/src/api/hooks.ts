@@ -6,6 +6,7 @@ import type {
   InterviewRound,
   JobApplication,
   JobStatus,
+  ResetSummary,
   UserSettings,
 } from './types';
 
@@ -129,6 +130,19 @@ export function useUpdateSettings() {
     mutationFn: async (input: Partial<UserSettings>) =>
       (await api.patch<UserSettings>('/settings', input)).data,
     onSuccess: (data) => qc.setQueryData(['settings'], data),
+  });
+}
+
+// Destructive — wipes all job/company data after the backend validates the confirm phrase.
+// On success, blow away the entire React Query cache so every visible page refetches from empty.
+export function useResetData() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { confirm: 'DELETE_ALL_DATA'; wipeEnrichmentCache?: boolean }) =>
+      (await api.post<{ deleted: ResetSummary }>('/settings/reset', input)).data,
+    onSuccess: () => {
+      qc.invalidateQueries();
+    },
   });
 }
 

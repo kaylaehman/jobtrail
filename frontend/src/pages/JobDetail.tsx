@@ -11,6 +11,7 @@ import {
 import { StatusPill } from '../components/StatusPill';
 import { DeadlineBadge } from '../components/DeadlineBadge';
 import { RoundTimeline } from '../components/RoundTimeline';
+import { StatusTimeline } from '../components/StatusTimeline';
 import { SkillChips } from '../components/SkillChips';
 import {
   ROUND_STATUS_LABEL,
@@ -106,6 +107,11 @@ export function JobDetail() {
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="card p-4 space-y-3">
+        <h2 className="text-lg font-semibold">Status history</h2>
+        <StatusTimeline events={job.statusEvents ?? []} />
       </div>
 
       <div className="card p-4 space-y-3">

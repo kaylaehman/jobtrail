@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { useAppSettings } from '../lib/settings-context';
+import { useResetData } from '../api/hooks';
 import { DATE_FORMAT_OPTIONS } from '../api/types';
 import type { DateFormatOption } from '../api/types';
 import { formatDateWithPattern } from '../lib/format';
+import { ConfirmResetModal } from '../components/ConfirmResetModal';
 
 const SAMPLE_ISO = new Date().toISOString();
 
 export function Settings() {
   const { settings, isLoading, setDateFormat } = useAppSettings();
+  const [resetOpen, setResetOpen] = useState(false);
+  const resetMutation = useResetData();
 
   if (isLoading || !settings) return <div className="text-slate-500">Loading…</div>;
 
@@ -56,6 +61,33 @@ export function Settings() {
           </div>
         )}
       </div>
+
+      <div className="card p-4 space-y-3 border-l-4 border-l-red-500">
+        <h2 className="text-lg font-semibold text-red-600">Danger zone</h2>
+        <p className="text-sm text-slate-600">
+          Starting a new job search? This wipes all your applications, interview rounds, status
+          history, and enriched company data. Your settings stay.
+        </p>
+        <button
+          className="btn bg-red-600 text-white hover:bg-red-700"
+          onClick={() => setResetOpen(true)}
+        >
+          Reset all data…
+        </button>
+      </div>
+
+      <ConfirmResetModal
+        isOpen={resetOpen}
+        isPending={resetMutation.isPending}
+        result={resetMutation.data?.deleted ?? null}
+        onClose={() => {
+          setResetOpen(false);
+          resetMutation.reset();
+        }}
+        onConfirm={(wipeEnrichmentCache) =>
+          resetMutation.mutate({ confirm: 'DELETE_ALL_DATA', wipeEnrichmentCache })
+        }
+      />
     </div>
   );
 }
