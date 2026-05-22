@@ -94,10 +94,13 @@ export class EnrichmentHttp {
 
   private async buildUserAgent(): Promise<string> {
     const settings = await this.prisma.userSettings.findUnique({ where: { id: 'default' } });
-    const email = settings?.contactEmail || process.env.JOBTRAIL_CONTACT_EMAIL || null;
-    return email
-      ? `JobTrail/0.1 ${email} (https://github.com/kaylaehman/jobtrail)`
-      : 'JobTrail/0.1 (https://github.com/kaylaehman/jobtrail)';
+    const email = settings?.contactEmail?.trim() || process.env.JOBTRAIL_CONTACT_EMAIL?.trim() || null;
+    // SEC EDGAR's published sample format is "Sample Company Name AdminContact@samplecompany.com"
+    // — plain space-separated, no slashes, parens, or URLs. Their gateway 403s on UAs that don't
+    // match that shape closely. So we strip the version + repo URL we used to include.
+    const userAgent = email ? `JobTrail ${email}` : 'JobTrail';
+    this.logger.debug?.(`outbound UA: ${userAgent}`);
+    return userAgent;
   }
 
   private async readCache<T>(url: string): Promise<T | null> {
