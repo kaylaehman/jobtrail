@@ -34,6 +34,17 @@ export interface CompanyResponse {
   enrichmentError: string | null;
 }
 
+// Listed rows include the application count so the grid can show how many of your apps map to each.
+export interface CompanyListItem extends CompanyResponse {
+  applicationCount: number;
+}
+
+export function toCompanyListItem(
+  c: Company & { applicationCount: number },
+): CompanyListItem {
+  return { ...toCompanyResponse(c), applicationCount: c.applicationCount };
+}
+
 export function toCompanyResponse(c: Company): CompanyResponse {
   return {
     id: c.id,

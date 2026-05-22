@@ -1,11 +1,26 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
-import { CompanyResponse, QidDto, toCompanyResponse } from './dto/company.dto';
+import {
+  CompanyListItem,
+  CompanyResponse,
+  QidDto,
+  toCompanyListItem,
+  toCompanyResponse,
+} from './dto/company.dto';
 import { WikidataCandidate } from './enrichment/wikidata-client';
 
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly companies: CompaniesService) {}
+
+  @Get()
+  async list(
+    @Query('q') q?: string,
+    @Query('industry') industry?: string,
+  ): Promise<CompanyListItem[]> {
+    const rows = await this.companies.list({ q, industry });
+    return rows.map(toCompanyListItem);
+  }
 
   // GET /api/companies/search?q=... — Wikidata candidate search for the disambiguation picker UI.
   // Defined before `:id` so the route doesn't get swallowed by the param matcher.

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import type {
   Company,
+  CompanyListItem,
   DiscoverResult,
   ExtractedSkills,
   InterviewRound,
@@ -145,6 +146,19 @@ export function useResetData() {
     onSuccess: () => {
       qc.invalidateQueries();
     },
+  });
+}
+
+export interface CompaniesQuery {
+  q?: string;
+  industry?: string;
+}
+
+// Grid view at /companies. List endpoint returns Company + applicationCount per row.
+export function useCompanies(params: CompaniesQuery = {}) {
+  return useQuery({
+    queryKey: ['companies', 'list', params],
+    queryFn: async () => (await api.get<CompanyListItem[]>('/companies', { params })).data,
   });
 }
 

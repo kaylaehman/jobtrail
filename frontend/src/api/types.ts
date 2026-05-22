@@ -57,6 +57,10 @@ export interface WikidataCandidate {
   description: string;
 }
 
+export interface CompanyListItem extends Company {
+  applicationCount: number;
+}
+
 export interface InterviewRound {
   id: string;
   jobApplicationId: string;

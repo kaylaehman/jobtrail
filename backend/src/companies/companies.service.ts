@@ -29,6 +29,27 @@ export class CompaniesService {
     return c;
   }
 
+  // List endpoint for the /companies grid page. Returns row + linked application count so the
+  // UI can show "3 applications" badges without a second query per card.
+  async list(q: { q?: string; industry?: string }): Promise<Array<Company & { applicationCount: number }>> {
+    const where: Record<string, unknown> = {};
+    if (q.q && q.q.trim()) {
+      where.OR = [
+        { name: { contains: q.q.trim(), mode: 'insensitive' } },
+        { normalizedName: { contains: q.q.trim().toLowerCase() } },
+      ];
+    }
+    if (q.industry && q.industry.trim()) {
+      where.industry = { contains: q.industry.trim(), mode: 'insensitive' };
+    }
+    const rows = await this.prisma.company.findMany({
+      where,
+      include: { _count: { select: { applications: true } } },
+      orderBy: [{ updatedAt: 'desc' }],
+    });
+    return rows.map(({ _count, ...rest }) => ({ ...rest, applicationCount: _count.applications }));
+  }
+
   async findByApplication(applicationId: string): Promise<Company | null> {
     const app = await this.prisma.jobApplication.findUnique({
       where: { id: applicationId },
