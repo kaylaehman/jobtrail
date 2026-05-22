@@ -8,13 +8,15 @@
 
 @layer components {
   .btn { @apply inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium border border-slate-300 bg-white hover:bg-slate-100 transition; }
-  /* Primary action uses the banner's blue→purple gradient. */
-  .btn-primary { @apply bg-gradient-to-r from-brand-blue to-brand-purple text-white border-transparent hover:from-brand-blue-light hover:to-brand-purple-light; }
+  /* Primary action uses the banner's sky→electric gradient. */
+  .btn-primary { @apply bg-gradient-to-r from-brand-sky to-brand-blue text-white border-transparent hover:opacity-90; }
+  /* Cyan→aqua gradient action — secondary / "discover" affordance. */
+  .btn-accent { @apply bg-gradient-to-r from-brand-cyan to-brand-aqua text-white border-transparent hover:opacity-90; }
   .input { @apply w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue; }
   .pill { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white; }
   .card { @apply rounded-lg border border-slate-200 bg-white shadow-sm; }
   /* Banner-style gradient wordmark — used for the header logo. */
-  .brand-wordmark { @apply bg-gradient-to-r from-brand-blue via-brand-purple-light to-brand-purple bg-clip-text text-transparent; }
+  .brand-wordmark { @apply bg-gradient-to-r from-brand-sky to-brand-blue bg-clip-text text-transparent; }
 }
 
 /* The §8.2 tree uses ├ / └ characters and indentation — needs a monospace font and stable line-height. */

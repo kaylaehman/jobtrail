@@ -25,6 +25,7 @@ export function Layout() {
             <NavLink to="/" end className={linkClass}>Dashboard</NavLink>
             <NavLink to="/discover" className={linkClass}>Discover</NavLink>
             <NavLink to="/jobs/new" className={linkClass}>+ Add Job</NavLink>
+            <NavLink to="/settings" className={linkClass} aria-label="Settings">⚙️</NavLink>
           </nav>
         </div>
       </header>

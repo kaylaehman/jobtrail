@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useJobs } from '../api/hooks';
 import { StatusPill } from '../components/StatusPill';
 import { DeadlineBadge } from '../components/DeadlineBadge';
-import { STATUS_LABEL, formatDate } from '../lib/format';
-import type { JobStatus } from '../api/types';
+import { STATUS_LABEL } from '../lib/format';
+import { useAppSettings } from '../lib/settings-context';
+import type { JobApplication, JobStatus } from '../api/types';
 
 const STATUS_OPTIONS: Array<JobStatus | ''> = [
   '',
@@ -17,16 +18,101 @@ const STATUS_OPTIONS: Array<JobStatus | ''> = [
   'withdrawn',
 ];
 
+type SortKey = 'company' | 'position' | 'status' | 'applied' | 'next' | 'tags';
+type SortDir = 'asc' | 'desc';
+
+// Status order for sorting — follows pipeline progression so "Saved → Applied → … → Offer" sorts ascending.
+const STATUS_RANK: Record<JobStatus, number> = {
+  saved: 0,
+  applied: 1,
+  phone_screen: 2,
+  interview: 3,
+  offer: 4,
+  rejected: 5,
+  withdrawn: 6,
+};
+
+function nextScheduledAt(j: JobApplication): string | null {
+  return j.rounds.find((r) => r.status === 'scheduled')?.scheduledAt ?? null;
+}
+
+function getSortValue(j: JobApplication, key: SortKey): string | number | null {
+  switch (key) {
+    case 'company': return j.company.toLowerCase();
+    case 'position': return j.position.toLowerCase();
+    case 'status': return STATUS_RANK[j.status];
+    case 'applied': return j.appliedAt ? new Date(j.appliedAt).getTime() : null;
+    case 'next': return (() => {
+      const iso = nextScheduledAt(j);
+      return iso ? new Date(iso).getTime() : null;
+    })();
+    case 'tags': return j.tags[0]?.toLowerCase() ?? null;
+  }
+}
+
+// Nulls always sort to the bottom so a column never "fills" with em-dashes at the top
+// when toggled to ascending. Direction only affects the ordering of present values.
+function compareJobs(a: JobApplication, b: JobApplication, key: SortKey, dir: SortDir): number {
+  const va = getSortValue(a, key);
+  const vb = getSortValue(b, key);
+  if (va === null && vb === null) return 0;
+  if (va === null) return 1;
+  if (vb === null) return -1;
+  const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+  return dir === 'asc' ? cmp : -cmp;
+}
+
+function SortHeader({
+  label, sortKey, sortBy, sortDir, onSort,
+}: {
+  label: string; sortKey: SortKey; sortBy: SortKey; sortDir: SortDir;
+  onSort: (k: SortKey) => void;
+}) {
+  const active = sortBy === sortKey;
+  return (
+    <th
+      className="px-3 py-2 cursor-pointer select-none hover:bg-slate-200/60"
+      aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      onClick={() => onSort(sortKey)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <span className={active ? 'text-slate-900' : 'text-slate-400'}>
+          {active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
+        </span>
+      </span>
+    </th>
+  );
+}
+
 export function Dashboard() {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<JobStatus | ''>('');
   const [tag, setTag] = useState('');
+  const [sortBy, setSortBy] = useState<SortKey>('applied');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const { formatDate } = useAppSettings();
 
   const { data, isLoading, isError } = useJobs({
     q: q || undefined,
     status: status || undefined,
     tag: tag || undefined,
   });
+
+  const sorted = useMemo(() => {
+    if (!data) return data;
+    return [...data].sort((a, b) => compareJobs(a, b, sortBy, sortDir));
+  }, [data, sortBy, sortDir]);
+
+  const handleSort = (k: SortKey) => {
+    if (k === sortBy) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(k);
+      // Date-y columns feel more natural as desc first (most recent / soonest at top).
+      setSortDir(k === 'applied' || k === 'next' ? 'desc' : 'asc');
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -69,33 +155,45 @@ export function Dashboard() {
       {isLoading && <div className="text-slate-500">Loading…</div>}
       {isError && <div className="text-rejected">Failed to load applications.</div>}
 
-      {data && data.length === 0 && (
+      {sorted && sorted.length === 0 && (
         <div className="card p-6 text-center text-slate-500">
           No applications yet. <Link to="/discover" className="text-applied underline">Discover jobs</Link>{' '}
           or <Link to="/jobs/new" className="text-applied underline">add one manually</Link>.
         </div>
       )}
 
-      {data && data.length > 0 && (
+      {sorted && sorted.length > 0 && (
         <div className="card overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-100 text-left">
               <tr>
-                <th className="px-3 py-2">Company</th>
-                <th className="px-3 py-2">Position</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Applied</th>
-                <th className="px-3 py-2">Next round</th>
-                <th className="px-3 py-2">Tags</th>
+                <SortHeader label="Company" sortKey="company" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Position" sortKey="position" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Status" sortKey="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Applied" sortKey="applied" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Next round" sortKey="next" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Tags" sortKey="tags" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
               </tr>
             </thead>
             <tbody>
-              {data.map((j) => {
+              {sorted.map((j) => {
                 const next = j.rounds.find((r) => r.status === 'scheduled');
                 return (
                   <tr key={j.id} className="border-t border-slate-200 hover:bg-slate-50">
                     <td className="px-3 py-2">
                       <Link to={`/jobs/${j.id}`} className="font-medium hover:underline">{j.company}</Link>
+                      {j.companyUrl && (
+                        <a
+                          href={j.companyUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`${j.company} website`}
+                          title={j.companyUrl}
+                          className="ml-1 text-xs text-applied hover:underline"
+                        >
+                          ↗
+                        </a>
+                      )}
                       <DeadlineBadge deadline={j.deadline} />
                     </td>
                     <td className="px-3 py-2">{j.position}</td>

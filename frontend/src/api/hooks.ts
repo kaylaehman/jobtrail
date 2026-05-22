@@ -6,6 +6,7 @@ import type {
   InterviewRound,
   JobApplication,
   JobStatus,
+  UserSettings,
 } from './types';
 
 export interface JobsQuery {
@@ -111,6 +112,23 @@ export function useDiscoverSearch() {
           input,
         )
       ).data,
+  });
+}
+
+export function useSettings() {
+  return useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => (await api.get<UserSettings>('/settings')).data,
+    staleTime: 60_000,
+  });
+}
+
+export function useUpdateSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<UserSettings>) =>
+      (await api.patch<UserSettings>('/settings', input)).data,
+    onSuccess: (data) => qc.setQueryData(['settings'], data),
   });
 }
 

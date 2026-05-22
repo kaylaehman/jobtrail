@@ -5,8 +5,8 @@ import {
   ROUND_STATUS_ICON,
   ROUND_STATUS_LABEL,
   ROUND_TYPE_LABEL,
-  formatDate,
 } from '../lib/format';
+import { useAppSettings } from '../lib/settings-context';
 
 // §8.2 ASCII-tree timeline. Each round is one tree branch with ├/└ characters
 // rendered in a monospaced font; details collapse via the chevron in the header.
@@ -20,6 +20,7 @@ export function RoundTimeline({
   onDelete?: (roundId: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { formatDate } = useAppSettings();
 
   if (rounds.length === 0) {
     return (

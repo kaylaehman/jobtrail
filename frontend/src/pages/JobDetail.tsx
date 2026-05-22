@@ -16,8 +16,8 @@ import {
   ROUND_STATUS_LABEL,
   ROUND_TYPE_LABEL,
   STATUS_LABEL,
-  formatDate,
 } from '../lib/format';
+import { useAppSettings } from '../lib/settings-context';
 import type { InterviewRound, JobStatus, RoundStatus, RoundType } from '../api/types';
 
 export function JobDetail() {
@@ -31,6 +31,7 @@ export function JobDetail() {
   const deleteRound = useDeleteRound(id ?? '');
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
+  const { formatDate } = useAppSettings();
 
   if (isLoading || !job) return <div className="text-slate-500">Loading…</div>;
 
@@ -55,7 +56,20 @@ export function JobDetail() {
               {nextScheduled?.scheduledAt && ` | Next: ${formatDate(nextScheduled.scheduledAt)}`}
             </div>
             <div className="text-xl font-bold mt-1">
-              {job.company} <span className="text-slate-400">|</span> {job.position}
+              {job.companyUrl ? (
+                <a
+                  href={job.companyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:underline"
+                  title={job.companyUrl}
+                >
+                  {job.company} ↗
+                </a>
+              ) : (
+                job.company
+              )}{' '}
+              <span className="text-slate-400">|</span> {job.position}
               <DeadlineBadge deadline={job.deadline} />
             </div>
             <div className="text-sm text-slate-600 mt-1">

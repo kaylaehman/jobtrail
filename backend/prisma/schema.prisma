@@ -46,6 +46,15 @@ enum RoundStatus {
   waiting
 }
 
+// Per-application disambiguation state. `auto` is the post-import default; users can promote
+// to `confirmed` (✓ verified) or demote to `rejected` (wrong entity — enrichment suppressed,
+// companyId nulled, and findOrCreateByNameOrDomain won't re-link on future imports).
+enum CompanyMatchStatus {
+  auto
+  confirmed
+  rejected
+}
+
 model JobApplication {
   id               String      @id @default(cuid())
   company          String
@@ -53,6 +62,7 @@ model JobApplication {
   source           JobSource   @default(manual)
   sourceJobId      String?     @map("source_job_id")
   jobUrl           String?     @map("job_url")
+  companyUrl       String?     @map("company_url")
   location         String?
   salaryMin        Int?        @map("salary_min")
   salaryMax        Int?        @map("salary_max")
@@ -66,14 +76,81 @@ model JobApplication {
   updatedAt        DateTime    @updatedAt @map("updated_at")
   tags             String[]    @default([])
   extractedSkills  Json?       @map("extracted_skills")
+  companyId        String?     @map("company_id")
+  companyMatchStatus CompanyMatchStatus @default(auto) @map("company_match_status")
 
   rounds           InterviewRound[]
+  // `company` (string) stays as the import-time snapshot; `companyEntity` is the enriched profile.
+  // FK is ON DELETE SET NULL so pruning a Company row never cascades into application loss.
+  companyEntity    Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   // NULL source_job_id (manual entries) does not conflict under Postgres NULL-distinct semantics.
   @@unique([source, sourceJobId], name: "source_sourceJobId_unique")
   @@index([status])
   @@index([company])
+  @@index([companyId])
   @@map("job_applications")
+}
+
+// Single-row table. id is always "default" because JobTrail is currently a single-user local app —
+// keeping it row-scoped (vs. a kv table) means we get type-safe columns and easy schema evolution.
+model UserSettings {
+  id          String   @id @default("default")
+  dateFormat  String   @default("yyyy-MM-dd") @map("date_format")
+  recentTags  String[] @default([])           @map("recent_tags")
+  updatedAt   DateTime @updatedAt             @map("updated_at")
+
+  @@map("user_settings")
+}
+
+// Enriched company profile. Populated lazily by the EnrichmentService from free public APIs
+// (Wikipedia, Wikidata, SEC EDGAR). `domain` and `normalizedName` are both unique so we can
+// dedup by either signal — JobSpy gives us domain inconsistently, so name-match is the fallback.
+model Company {
+  id              String    @id @default(cuid())
+  domain          String?   @unique
+  name            String
+  // Lowercased and stripped of legal suffixes (Inc, LLC, Corp, …) — see CompaniesService.normalizeName.
+  normalizedName  String    @unique               @map("normalized_name")
+  logoUrl         String?                         @map("logo_url")
+  description     String?   @db.Text
+  wikipediaUrl    String?                         @map("wikipedia_url")
+  wikidataQid     String?                         @map("wikidata_qid")
+  cik             String?
+  employees       Int?
+  employeesAsOf   DateTime?                       @map("employees_as_of")
+  // Stored in cents would be safer, but Wikidata/EDGAR both report whole dollars — keep BigInt.
+  revenueUsd      BigInt?                         @map("revenue_usd")
+  revenueAsOf     DateTime?                       @map("revenue_as_of")
+  foundedYear     Int?                            @map("founded_year")
+  hqLocation      String?                         @map("hq_location")
+  industry        String?
+  website         String?
+  // Per-field provenance, e.g. { revenueUsd: "edgar", description: "wikipedia" }.
+  sources         Json      @default("{}")
+  lastEnrichedAt  DateTime?                       @map("last_enriched_at")
+  enrichmentError String?   @db.Text              @map("enrichment_error")
+  createdAt       DateTime  @default(now())       @map("created_at")
+  updatedAt       DateTime  @updatedAt            @map("updated_at")
+
+  applications    JobApplication[]
+
+  @@index([lastEnrichedAt])
+  @@map("companies")
+}
+
+// 7-day TTL HTTP response cache for enrichment sources — keyed by URL so re-running enrichment
+// in dev (or after a failed source) doesn't re-hit upstream. EDGAR especially is finicky about
+// rate limits, and Wikidata SPARQL is slow. Cleaned out opportunistically on read.
+model EnrichmentCache {
+  url       String   @id
+  body      Json
+  status    Int
+  cachedAt  DateTime @default(now()) @map("cached_at")
+  expiresAt DateTime                 @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("enrichment_cache")
 }
 
 model InterviewRound {

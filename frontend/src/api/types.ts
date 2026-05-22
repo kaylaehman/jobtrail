@@ -58,6 +58,7 @@ export interface JobApplication {
   source: JobSource;
   sourceJobId: string | null;
   jobUrl: string | null;
+  companyUrl: string | null;
   location: string | null;
   salaryMin: number | null;
   salaryMax: number | null;
@@ -72,6 +73,24 @@ export interface JobApplication {
   tags: string[];
   extractedSkills: ExtractedSkills | null;
   rounds: InterviewRound[];
+}
+
+export const DATE_FORMAT_OPTIONS = [
+  'M/d/yy',
+  'MM/dd/yyyy',
+  'yyyy-MM-dd',
+  'EEEE, MMM d, yyyy',
+  'MMM d, yyyy',
+  'd MMM yyyy',
+] as const;
+
+export type DateFormatOption = (typeof DATE_FORMAT_OPTIONS)[number];
+
+export interface UserSettings {
+  id: string;
+  dateFormat: DateFormatOption;
+  recentTags: string[];
+  updatedAt: string;
 }
 
 export interface DiscoverResult {

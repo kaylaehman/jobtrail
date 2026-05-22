@@ -62,6 +62,12 @@ export class JobsService {
         ? (this.skills.extract(dto.description) as unknown as Prisma.InputJsonValue)
         : Prisma.DbNull;
     }
+    // Rejecting the auto-matched company means the existing companyId is wrong — drop the link
+    // so the UI doesn't keep rendering the wrong logo/description. `auto` and `confirmed` both
+    // imply the current companyId is intended, so leave it alone.
+    if (dto.companyMatchStatus === 'rejected') {
+      data.companyId = null;
+    }
     return this.prisma.jobApplication.update({
       where: { id },
       data,

@@ -5,6 +5,8 @@ import { JobsModule } from './jobs/jobs.module';
 import { RoundsModule } from './rounds/rounds.module';
 import { SkillsModule } from './skills/skills.module';
 import { DiscoverModule } from './discover/discover.module';
+import { SettingsModule } from './settings/settings.module';
+import { CompaniesModule } from './companies/companies.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -15,6 +17,8 @@ import { HealthController } from './health.controller';
     RoundsModule,
     SkillsModule,
     DiscoverModule,
+    SettingsModule,
+    CompaniesModule,
   ],
   controllers: [HealthController],
 })

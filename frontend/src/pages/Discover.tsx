@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDiscoverImport, useDiscoverSearch } from '../api/hooks';
+import { formatSalaryRange } from '../lib/format';
 import type { DiscoverResult } from '../api/types';
 
 const SITES = ['linkedin', 'indeed', 'glassdoor', 'google', 'ziprecruiter'] as const;
@@ -71,25 +72,46 @@ export function Discover() {
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-          <input className="input" placeholder="Search term" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          <input className="input" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
-          <input
-            className="input"
-            type="number"
-            min={1}
-            max={200}
-            placeholder="Results wanted"
-            value={resultsWanted}
-            onChange={(e) => setResultsWanted(parseInt(e.target.value || '25', 10))}
-          />
-          <input
-            className="input"
-            type="number"
-            min={1}
-            placeholder="Hours old"
-            value={hoursOld}
-            onChange={(e) => setHoursOld(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
-          />
+          <label className="text-xs font-medium text-slate-600">
+            Search term
+            <input
+              className="input mt-1"
+              placeholder="e.g. software engineer"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </label>
+          <label className="text-xs font-medium text-slate-600">
+            Location
+            <input
+              className="input mt-1"
+              placeholder="e.g. Remote or Boston, MA"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </label>
+          <label className="text-xs font-medium text-slate-600">
+            Results wanted
+            <input
+              className="input mt-1"
+              type="number"
+              min={1}
+              max={200}
+              value={resultsWanted}
+              onChange={(e) => setResultsWanted(parseInt(e.target.value || '25', 10))}
+            />
+          </label>
+          <label className="text-xs font-medium text-slate-600">
+            Max age (hours)
+            <input
+              className="input mt-1"
+              type="number"
+              min={1}
+              placeholder="e.g. 72"
+              value={hoursOld}
+              onChange={(e) => setHoursOld(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+            />
+          </label>
         </div>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-1 text-sm">
@@ -146,9 +168,7 @@ export function Discover() {
                       {r.location ?? '—'} {r.is_remote ? '· 🌐' : ''}
                     </td>
                     <td className="px-3 py-2">
-                      {r.min_amount || r.max_amount
-                        ? `${r.min_amount ?? '?'}–${r.max_amount ?? '?'} ${r.currency ?? ''}`
-                        : '—'}
+                      {formatSalaryRange(r.min_amount, r.max_amount, r.currency)}
                     </td>
                     <td className="px-3 py-2 text-right">
                       <button className="btn" disabled={imported} onClick={() => handleImport(r)}>

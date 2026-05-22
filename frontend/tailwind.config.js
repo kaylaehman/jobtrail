@@ -4,27 +4,30 @@ export default {
   theme: {
     extend: {
       colors: {
-        // JobTrail brand palette — sampled from jobtrail-banner.png.
-        // Navy is the dark "chrome" backdrop; blue→purple is the wordmark gradient;
-        // teal/cyan are the road accent from the location-pin icon.
+        // JobTrail brand palette — user-supplied hex codes.
+        // Two gradients are canonical: blue→purple (4894F1 → 5F65F7) and cyan→aqua (3BB2D2 → 2DA198).
         brand: {
-          navy: '#0a0f2c',
-          'navy-deep': '#070a1f',
-          blue: '#4f7df9',
-          'blue-light': '#6c91fc',
-          purple: '#8b5cf6',
-          'purple-light': '#a78bfa',
-          teal: '#2dd4bf',
-          cyan: '#06b6d4',
+          navy: '#00061A',          // Deep Navy Background
+          'navy-deep': '#00061A',
+          indigo: '#1E2558',        // Dark Indigo (card/chrome accent)
+          white: '#F8F8F8',         // Bright White
+          blue: '#5F65F7',          // Electric Blue (primary action)
+          'blue-light': '#4894F1',  // Sky Blue (gradient stop)
+          sky: '#4894F1',
+          purple: '#5F65F7',
+          'purple-light': '#7F84F9',
+          steel: '#3158A5',         // Steel Blue
+          cyan: '#3BB2D2',          // Cyan Teal
+          teal: '#2DA198',          // Aqua Green
+          aqua: '#2DA198',
         },
-        // Status pill palette — realigned to the brand colors for the active
-        // pipeline statuses; rejected/withdrawn deliberately stay outside the
-        // brand range so they read as "exit" states at a glance.
+        // Status pill palette — maps the pipeline statuses onto the new brand range.
+        // rejected/withdrawn intentionally stay outside-brand so they read as exit states.
         saved: '#94a3b8',
-        applied: '#4f7df9',       // brand blue
-        phone_screen: '#8b5cf6',  // brand purple
-        interview: '#06b6d4',     // brand cyan
-        offer: '#2dd4bf',         // brand teal
+        applied: '#5F65F7',       // electric blue
+        phone_screen: '#4894F1',  // sky blue
+        interview: '#3BB2D2',     // cyan teal
+        offer: '#2DA198',         // aqua green
         rejected: '#ef4444',
         withdrawn: '#64748b',
       },

@@ -7,7 +7,9 @@ import {
   useUpdateJob,
 } from '../api/hooks';
 import { SkillChips } from '../components/SkillChips';
+import { TagInput } from '../components/TagInput';
 import { STATUS_LABEL } from '../lib/format';
+import { useAppSettings } from '../lib/settings-context';
 import type { ExtractedSkills, JobApplication, JobStatus } from '../api/types';
 
 type FormState = Partial<JobApplication>;
@@ -28,14 +30,13 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
     remote: false,
     tags: [],
   });
-  const [tagsInput, setTagsInput] = useState('');
   const [skills, setSkills] = useState<ExtractedSkills | null>(null);
   const [extractDebounce, setExtractDebounce] = useState<number | null>(null);
+  const { settings, recordTags } = useAppSettings();
 
   useEffect(() => {
     if (mode === 'edit' && job) {
       setForm(job);
-      setTagsInput(job.tags.join(', '));
       setSkills(job.extractedSkills);
     }
   }, [mode, job]);
@@ -58,14 +59,10 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: FormState = {
-      ...form,
-      tags: tagsInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
-      extractedSkills: skills ?? undefined,
-    };
+    const tags = (form.tags ?? []).map((t) => t.trim()).filter(Boolean);
+    const payload: FormState = { ...form, tags, extractedSkills: skills ?? undefined };
+    // Fire-and-forget — recording tags should never block navigation.
+    void recordTags(tags);
     if (mode === 'edit' && id) {
       await updateJob.mutateAsync(payload);
       navigate(`/jobs/${id}`);
@@ -119,11 +116,21 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
           />
         </label>
         <label className="text-sm">
-          Job URL
+          Job posting URL
           <input
             className="input mt-1"
+            placeholder="https://… (the listing)"
             value={form.jobUrl ?? ''}
             onChange={(e) => setForm({ ...form, jobUrl: e.target.value })}
+          />
+        </label>
+        <label className="text-sm">
+          Company website
+          <input
+            className="input mt-1"
+            placeholder="https://company.com"
+            value={form.companyUrl ?? ''}
+            onChange={(e) => setForm({ ...form, companyUrl: e.target.value })}
           />
         </label>
         <label className="text-sm">
@@ -186,10 +193,15 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
           />
           Remote
         </label>
-        <label className="text-sm sm:col-span-2">
-          Tags (comma-separated)
-          <input className="input mt-1" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
-        </label>
+        <div className="text-sm sm:col-span-2">
+          <div className="mb-1">Tags</div>
+          <TagInput
+            value={form.tags ?? []}
+            onChange={(next) => setForm({ ...form, tags: next })}
+            suggestions={settings?.recentTags ?? []}
+            placeholder="Type to add — Enter to confirm, ↓ to pick a suggestion"
+          />
+        </div>
         <label className="text-sm sm:col-span-2">
           Description / requirements
           <textarea
