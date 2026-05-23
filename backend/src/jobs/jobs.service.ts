@@ -124,6 +124,13 @@ export class JobsService {
       await this.prisma.jobStatusEvent.create({
         data: { jobApplicationId: id, fromStatus: existing.status, toStatus: dto.status },
       });
+
+      // Auto-stamp appliedAt on any transition into `applied`. Preserves an existing value
+      // (the first applied date is the meaningful one — re-entering `applied` after a
+      // detour through `rejected` shouldn't overwrite it). An explicit dto.appliedAt wins.
+      if (dto.status === 'applied' && !data.appliedAt && !existing.appliedAt) {
+        data.appliedAt = new Date();
+      }
     }
     return this.prisma.jobApplication.update({
       where: { id },

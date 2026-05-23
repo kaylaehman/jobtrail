@@ -31,6 +31,13 @@ describe('JobsService', () => {
     enqueueIfStale: jest.fn(),
   } as unknown as CompaniesService;
 
+  // skillsStub and companiesStub are defined once at describe scope, so jest.fn() call history
+  // would otherwise accumulate across tests and break .toHaveBeenCalledWith assertions that
+  // expect a specific call count. Reset between each test.
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('list applies status filter', async () => {
     const prisma = makePrismaMock();
     const svc = new JobsService(prisma as unknown as PrismaService, skillsStub, companiesStub);
@@ -62,7 +69,7 @@ describe('JobsService', () => {
     const prisma = makePrismaMock();
     const svc = new JobsService(prisma as unknown as PrismaService, skillsStub, companiesStub);
     await svc.create({ company: 'Acme', position: 'Engineer' });
-    expect(companiesStub.findOrCreateByNameOrDomain).toHaveBeenCalledWith('Acme', undefined);
+    expect(companiesStub.findOrCreateByNameOrDomain).toHaveBeenCalledWith('Acme');
     expect(prisma.jobApplication.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ companyId: 'company-1' }) }),
     );
@@ -84,5 +91,49 @@ describe('JobsService', () => {
     const prisma = makePrismaMock();
     const svc = new JobsService(prisma as unknown as PrismaService, skillsStub, companiesStub);
     await expect(svc.findOne('missing')).rejects.toThrow(/not found/i);
+  });
+
+  describe('update — appliedAt auto-stamp on transition into applied', () => {
+    const withExisting = (existing: Record<string, unknown>) => {
+      const prisma = makePrismaMock();
+      prisma.jobApplication.findUnique.mockResolvedValue({
+        id: 'job-1',
+        status: 'saved',
+        appliedAt: null,
+        ...existing,
+      });
+      const svc = new JobsService(prisma as unknown as PrismaService, skillsStub, companiesStub);
+      return { prisma, svc };
+    };
+
+    it('stamps now() when transitioning saved -> applied with no prior appliedAt', async () => {
+      const { prisma, svc } = withExisting({ status: 'saved', appliedAt: null });
+      await svc.update('job-1', { status: 'applied' as never });
+      const call = prisma.jobApplication.update.mock.calls[0][0];
+      expect(call.data.appliedAt).toBeInstanceOf(Date);
+    });
+
+    it('preserves an existing appliedAt across status changes', async () => {
+      const prior = new Date('2026-01-15T00:00:00Z');
+      const { prisma, svc } = withExisting({ status: 'rejected', appliedAt: prior });
+      await svc.update('job-1', { status: 'applied' as never });
+      const call = prisma.jobApplication.update.mock.calls[0][0];
+      expect(call.data.appliedAt).toBeUndefined();
+    });
+
+    it('honors an explicit dto.appliedAt over the auto-stamp', async () => {
+      const { prisma, svc } = withExisting({ status: 'saved', appliedAt: null });
+      const explicit = '2026-03-01T00:00:00.000Z';
+      await svc.update('job-1', { status: 'applied' as never, appliedAt: explicit });
+      const call = prisma.jobApplication.update.mock.calls[0][0];
+      expect(call.data.appliedAt).toEqual(new Date(explicit));
+    });
+
+    it('does not stamp when status changes between non-applied states', async () => {
+      const { prisma, svc } = withExisting({ status: 'saved', appliedAt: null });
+      await svc.update('job-1', { status: 'rejected' as never });
+      const call = prisma.jobApplication.update.mock.calls[0][0];
+      expect(call.data.appliedAt).toBeUndefined();
+    });
   });
 });

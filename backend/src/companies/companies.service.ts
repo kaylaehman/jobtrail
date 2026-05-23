@@ -1,6 +1,12 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Company } from '@prisma/client';
-import { JaroWinklerDistance } from 'natural';
+// Direct submodule import avoids `natural`'s barrel index, which eagerly loads the sentiment
+// analyzer + Redis storage backend — both transitively pulling ESM-only deps (`afinn-165`,
+// `redis`) that ts-jest can't parse. Functionally identical at runtime; only the resolution
+// path differs.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const JaroWinklerDistance: (a: string, b: string) => number =
+  require('natural/lib/natural/distance/jaro-winkler_distance');
 import { PrismaService } from '../prisma/prisma.service';
 import { EnrichmentService } from './enrichment/enrichment.service';
 import { WikidataCandidate, WikidataClient } from './enrichment/wikidata-client';
