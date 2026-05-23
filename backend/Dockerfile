@@ -14,7 +14,7 @@ ENV NODE_ENV=production
 RUN apk add --no-cache openssl bash
 COPY package.json package-lock.json* ./
 # `prisma` CLI is needed at runtime for `prisma migrate deploy` in the entrypoint.
-# `ts-node`/`typescript` are deliberately NOT installed — seed.js is plain CJS, main.js is precompiled.
+# `ts-node`/`typescript` are deliberately NOT installed — main.js is precompiled.
 RUN npm install --omit=dev && npm install prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma

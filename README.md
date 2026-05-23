@@ -197,7 +197,7 @@ curl -O https://raw.githubusercontent.com/kaylaehman/jobtrail/main/compose.hub.y
 docker compose -f compose.hub.yml up -d
 ```
 
-Open <http://localhost:3000>. First-time DB init + migrations + seed takes ~30 seconds. To stop and remove the volume:
+Open <http://localhost:3000>. First-time DB init + migrations takes ~30 seconds. To stop and remove the volume:
 
 ```sh
 docker compose -f compose.hub.yml down -v
@@ -219,8 +219,9 @@ docker compose up --build
 | JobSpy sidecar | _internal_ (compose network)         | Reachable only from backend   |
 | Postgres       | _internal_ (compose network)         | Persisted in `jobtrail_pgdata`|
 
-On first boot the backend runs `prisma migrate deploy` and seeds three example
-applications so the dashboard isn't empty.
+On first boot the backend runs `prisma migrate deploy` against an empty database.
+The dashboard starts empty — add jobs via **+ Add Job** or import them from the
+**Discover** tab.
 
 ---
 
@@ -231,12 +232,12 @@ After `docker compose up`, open <http://localhost:3000> and click through:
 | FR   | Feature                            | How to verify                                                                                          |
 | ---- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | FR-1 | Job CRUD                           | Dashboard → **+ Add Job** → fill the form → save. Edit/delete from the application detail page.       |
-| FR-2 | Multi-round progress tracking      | Open the seeded **TechCorp Inc.** job. The §8.2 ASCII-tree timeline shows Rounds 1–4 with status icons.|
+| FR-2 | Multi-round progress tracking      | Add a job, open it, then click **+ Add round** on the Rounds card. The §8.2 ASCII-tree timeline shows numbered rounds with status icons.|
 | FR-3 | Save job description / requirements| Paste the description into the Add-job form's "Description / requirements" field — it persists.        |
 | FR-4 | AI skills extraction               | Pasting a description triggers the local NLP extractor and shows §8.3 categorized chips.               |
 | FR-5 | Notes & feedback per round         | On the detail page, hover any timeline round → ✏️ Edit → update the Notes textarea → Save. Free-form per-application notes also live in the **Activity** card.|
 | FR-6 | Search & filter                    | Dashboard top bar: free-text `q`, status, tag, industry (comma-multi), job type.                       |
-| FR-7 | Deadline reminders                 | The seeded **CloudCo** job has a deadline 5 days out → amber "🟡 Due in 5d" badge on the dashboard.  |
+| FR-7 | Deadline reminders                 | Add a job and set its deadline within the next week → an amber "🟡 Due in Nd" badge appears on the dashboard.  |
 | New  | JobSpy discovery                   | **Discover** tab → pick sites → search → **Save to tracker** to import.                                |
 
 ---

@@ -20,11 +20,13 @@ const JOB_TYPES = [
 const PAGE_SIZE = 25;
 
 export function Discover() {
-  const [sites, setSites] = useState<string[]>(['linkedin', 'indeed']);
-  const [searchTerm, setSearchTerm] = useState('software engineer');
-  const [location, setLocation] = useState('Remote');
+  // All inputs start blank so the user explicitly opts in to every filter — only `hoursOld` keeps
+  // a default (72) because un-bounded JobSpy queries return stale results and rate-limit hard.
+  const [sites, setSites] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [location, setLocation] = useState('');
   const [hoursOld, setHoursOld] = useState<number | ''>(72);
-  const [isRemote, setIsRemote] = useState(true);
+  const [isRemote, setIsRemote] = useState(false);
   const [jobType, setJobType] = useState<string>('');
   const [includeKeywords, setIncludeKeywords] = useState('');
   const [excludeKeywords, setExcludeKeywords] = useState('');
