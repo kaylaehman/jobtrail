@@ -238,9 +238,9 @@ export function Discover() {
           <table className="min-w-full text-sm">
             <thead className="bg-slate-900 text-left text-slate-300">
               <tr>
+                <th className="px-3 py-2">Position</th>
                 <th className="px-3 py-2">Site</th>
                 <th className="px-3 py-2">Company</th>
-                <th className="px-3 py-2">Position</th>
                 <th className="px-3 py-2">Location</th>
                 <th className="px-3 py-2">Salary</th>
                 <th className="px-3 py-2"></th>
@@ -251,17 +251,17 @@ export function Discover() {
                 const imported = importedIds.has(r.id);
                 return (
                   <tr key={`${r.site}-${r.id}`} className="border-t border-slate-700 hover:bg-slate-900/50">
-                    <td className="px-3 py-2 capitalize">{r.site}</td>
-                    <td className="px-3 py-2">{r.company ?? '—'}</td>
                     <td className="px-3 py-2">
                       {r.job_url ? (
-                        <a href={r.job_url} target="_blank" rel="noreferrer" className="hover:underline">
+                        <a href={r.job_url} target="_blank" rel="noreferrer" className="hover:underline font-medium">
                           {r.title ?? '—'}
                         </a>
                       ) : (
                         r.title ?? '—'
                       )}
                     </td>
+                    <td className="px-3 py-2 capitalize">{r.site}</td>
+                    <td className="px-3 py-2">{r.company ?? '—'}</td>
                     <td className="px-3 py-2">
                       {r.location ?? '—'} {r.is_remote ? '· 🌐' : ''}
                     </td>

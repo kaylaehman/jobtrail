@@ -181,8 +181,8 @@ export function Dashboard() {
           <table className="min-w-full text-sm">
             <thead className="bg-slate-900 text-left text-slate-300">
               <tr>
-                <SortHeader label="Company" sortKey="company" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Position" sortKey="position" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Company" sortKey="company" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Status" sortKey="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Applied" sortKey="applied" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Job type" sortKey="jobType" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
@@ -194,23 +194,23 @@ export function Dashboard() {
                 return (
                   <tr key={j.id} className="border-t border-slate-700 hover:bg-slate-900/40">
                     <td className="px-3 py-2">
+                      <Link to={`/jobs/${j.id}`} className="font-medium hover:underline" title="View application">
+                        {j.position}
+                      </Link>
+                      <DeadlineBadge deadline={j.deadline} />
+                    </td>
+                    <td className="px-3 py-2">
                       {j.companyId ? (
                         <Link
                           to={`/companies/${j.companyId}`}
-                          className="font-medium hover:underline"
+                          className="hover:underline"
                           title="View company"
                         >
                           {j.company}
                         </Link>
                       ) : (
-                        <span className="font-medium">{j.company}</span>
+                        <span>{j.company}</span>
                       )}
-                      <DeadlineBadge deadline={j.deadline} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Link to={`/jobs/${j.id}`} className="hover:underline" title="View application">
-                        {j.position}
-                      </Link>
                     </td>
                     <td className="px-3 py-2"><StatusPill status={j.status} /></td>
                     <td className="px-3 py-2">{formatDate(j.appliedAt)}</td>
