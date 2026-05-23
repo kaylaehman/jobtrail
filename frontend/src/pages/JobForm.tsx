@@ -127,6 +127,18 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
           />
         </label>
         <label className="text-sm">
+          Application portal URL
+          <input
+            className="input mt-1"
+            type="url"
+            placeholder="https://careers.company.com/me/applications"
+            value={form.applicationPortalUrl ?? ''}
+            onChange={(e) =>
+              setForm({ ...form, applicationPortalUrl: e.target.value || null })
+            }
+          />
+        </label>
+        <label className="text-sm">
           Job type
           <select
             className="input mt-1"

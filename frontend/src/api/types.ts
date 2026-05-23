@@ -137,6 +137,7 @@ export interface JobApplication {
   source: JobSource;
   sourceJobId: string | null;
   jobUrl: string | null;
+  applicationPortalUrl: string | null;
   location: string | null;
   salaryMin: number | null;
   salaryMax: number | null;

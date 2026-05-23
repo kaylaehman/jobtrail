@@ -71,6 +71,7 @@ model JobApplication {
   source           JobSource   @default(manual)
   sourceJobId      String?     @map("source_job_id")
   jobUrl           String?     @map("job_url")
+  applicationPortalUrl String? @map("application_portal_url")
   location         String?
   salaryMin        Int?        @map("salary_min")
   salaryMax        Int?        @map("salary_max")

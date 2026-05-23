@@ -17,6 +17,7 @@ import { JobActivityLog } from '../components/JobActivityLog';
 import { CompanyPanel } from '../components/CompanyPanel';
 import { SkillChips } from '../components/SkillChips';
 import { BackButton } from '../components/BackButton';
+import { PortalUrlField } from '../components/PortalUrlField';
 import {
   JOB_TYPE_LABEL,
   ROUND_STATUS_LABEL,
@@ -80,6 +81,9 @@ export function JobDetail() {
                   Source ↗
                 </a>
               )}
+            </div>
+            <div className="mt-2">
+              <PortalUrlField jobId={job.id} value={job.applicationPortalUrl} />
             </div>
           </div>
           <div className="flex gap-2">

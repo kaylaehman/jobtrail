@@ -35,6 +35,9 @@ export class UpdateJobDto implements Partial<CreateJobDto> {
   jobUrl?: string;
 
   @IsOptional() @IsString()
+  applicationPortalUrl?: string;
+
+  @IsOptional() @IsString()
   location?: string;
 
   @IsOptional() @IsInt()

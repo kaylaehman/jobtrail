@@ -28,6 +28,9 @@ export class CreateJobDto {
   jobUrl?: string;
 
   @IsOptional() @IsString()
+  applicationPortalUrl?: string;
+
+  @IsOptional() @IsString()
   location?: string;
 
   @IsOptional() @IsInt()
