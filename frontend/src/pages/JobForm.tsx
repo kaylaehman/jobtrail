@@ -63,12 +63,14 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
     const payload: FormState = { ...form, tags, extractedSkills: skills ?? undefined };
     // Fire-and-forget — recording tags should never block navigation.
     void recordTags(tags);
+    // `replace: true` so the form URL doesn't linger in history — Back from the detail
+    // page should skip the (now-stale) form and return to wherever the user came from.
     if (mode === 'edit' && id) {
       await updateJob.mutateAsync(payload);
-      navigate(`/jobs/${id}`);
+      navigate(`/jobs/${id}`, { replace: true });
     } else {
       const created = await createJob.mutateAsync(payload);
-      navigate(`/jobs/${created.id}`);
+      navigate(`/jobs/${created.id}`, { replace: true });
     }
   };
 
