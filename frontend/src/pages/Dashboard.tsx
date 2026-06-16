@@ -213,7 +213,7 @@ export function Dashboard() {
                       )}
                     </td>
                     <td className="px-3 py-2"><StatusPill status={j.status} /></td>
-                    <td className="px-3 py-2">{formatDate(j.appliedAt)}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{formatDate(j.appliedAt)}</td>
                     <td className="px-3 py-2 text-slate-300">{j.jobType ? JOB_TYPE_LABEL[j.jobType] : '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-1">

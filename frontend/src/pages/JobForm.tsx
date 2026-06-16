@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   useCreateJob,
   useExtractSkills,
   useJob,
   useUpdateJob,
 } from '../api/hooks';
+import { BackButton } from '../components/BackButton';
 import { SkillChips } from '../components/SkillChips';
 import { TagInput } from '../components/TagInput';
-import { JOB_TYPE_LABEL, STATUS_LABEL } from '../lib/format';
+import { COMMON_CURRENCIES, JOB_TYPE_LABEL, STATUS_LABEL, dateInputToISO } from '../lib/format';
 import { useAppSettings } from '../lib/settings-context';
 import type { ExtractedSkills, JobApplication, JobStatus, JobType } from '../api/types';
 
@@ -16,6 +17,7 @@ type FormState = Partial<JobApplication>;
 
 export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const editing = mode === 'edit' && id;
   const { data: job } = useJob(editing ? id : undefined);
@@ -63,19 +65,27 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
     const payload: FormState = { ...form, tags, extractedSkills: skills ?? undefined };
     // Fire-and-forget — recording tags should never block navigation.
     void recordTags(tags);
-    // `replace: true` so the form URL doesn't linger in history — Back from the detail
-    // page should skip the (now-stale) form and return to wherever the user came from.
     if (mode === 'edit' && id) {
       await updateJob.mutateAsync(payload);
-      navigate(`/jobs/${id}`, { replace: true });
+      // Pop the /edit URL off history (the form is a transient state — Back from the detail page
+      // should land on wherever the user came from before opening the form, not on a stale form
+      // they just submitted). For direct-loaded /edit (bookmark, refresh), there's no -1 to pop,
+      // so fall back to a replace nav.
+      if (location.key !== 'default') {
+        navigate(-1);
+      } else {
+        navigate(`/jobs/${id}`, { replace: true });
+      }
     } else {
       const created = await createJob.mutateAsync(payload);
+      // Create: replace /jobs/new with the new detail URL so Back skips the now-empty form.
       navigate(`/jobs/${created.id}`, { replace: true });
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-3xl">
+      <BackButton fallback="/" />
       <h1 className="text-2xl font-bold">{mode === 'edit' ? 'Edit job' : 'Add job'}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -109,14 +119,33 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
             ))}
           </select>
         </label>
-        <label className="text-sm">
-          Location
-          <input
-            className="input mt-1"
-            value={form.location ?? ''}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-          />
-        </label>
+        <div className="text-sm">
+          <label className="block">
+            Location
+            <input
+              className="input mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              value={form.remote ? '' : (form.location ?? '')}
+              disabled={form.remote ?? false}
+              placeholder={form.remote ? 'Remote — no location' : ''}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+            />
+          </label>
+          <label className="mt-2 flex items-center gap-2 text-xs text-slate-300">
+            <input
+              type="checkbox"
+              checked={form.remote ?? false}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  remote: e.target.checked,
+                  // Clear location when going remote so the persisted value matches what the user sees.
+                  location: e.target.checked ? null : form.location,
+                })
+              }
+            />
+            Remote
+          </label>
+        </div>
         <label className="text-sm">
           Job posting URL
           <input
@@ -177,11 +206,18 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
         </label>
         <label className="text-sm">
           Currency
-          <input
+          <select
             className="input mt-1"
             value={form.salaryCurrency ?? ''}
-            onChange={(e) => setForm({ ...form, salaryCurrency: e.target.value })}
-          />
+            onChange={(e) =>
+              setForm({ ...form, salaryCurrency: e.target.value || null })
+            }
+          >
+            <option value="">— unspecified —</option>
+            {COMMON_CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
         </label>
         <label className="text-sm">
           Applied at
@@ -190,7 +226,7 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
             type="date"
             value={form.appliedAt ? form.appliedAt.slice(0, 10) : ''}
             onChange={(e) =>
-              setForm({ ...form, appliedAt: e.target.value ? new Date(e.target.value).toISOString() : null })
+              setForm({ ...form, appliedAt: e.target.value ? dateInputToISO(e.target.value) : null })
             }
           />
         </label>
@@ -201,17 +237,9 @@ export function JobForm({ mode }: { mode: 'create' | 'edit' }) {
             type="date"
             value={form.deadline ? form.deadline.slice(0, 10) : ''}
             onChange={(e) =>
-              setForm({ ...form, deadline: e.target.value ? new Date(e.target.value).toISOString() : null })
+              setForm({ ...form, deadline: e.target.value ? dateInputToISO(e.target.value) : null })
             }
           />
-        </label>
-        <label className="text-sm sm:col-span-2 flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.remote ?? false}
-            onChange={(e) => setForm({ ...form, remote: e.target.checked })}
-          />
-          Remote
         </label>
         <div className="text-sm sm:col-span-2">
           <div className="mb-1">Tags</div>
