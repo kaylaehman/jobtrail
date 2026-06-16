@@ -86,7 +86,7 @@ export function Dashboard() {
   const [jobType, setJobType] = useState<JobType | ''>('');
   const [sortBy, setSortBy] = useState<SortKey>('applied');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
-  const { formatDate } = useAppSettings();
+  const { formatCalendarDate } = useAppSettings();
 
   const { data, isLoading, isError } = useJobs({
     q: q || undefined,
@@ -185,7 +185,7 @@ export function Dashboard() {
                 <SortHeader label="Company" sortKey="company" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Status" sortKey="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Applied" sortKey="applied" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <SortHeader label="Job type" sortKey="jobType" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Type" sortKey="jobType" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Tags" sortKey="tags" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
               </tr>
             </thead>
@@ -213,7 +213,7 @@ export function Dashboard() {
                       )}
                     </td>
                     <td className="px-3 py-2"><StatusPill status={j.status} /></td>
-                    <td className="px-3 py-2 whitespace-nowrap">{formatDate(j.appliedAt)}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{formatCalendarDate(j.appliedAt)}</td>
                     <td className="px-3 py-2 text-slate-300">{j.jobType ? JOB_TYPE_LABEL[j.jobType] : '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-1">

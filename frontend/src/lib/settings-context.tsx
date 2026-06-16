@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useSettings, useUpdateSettings } from '../api/hooks';
-import { formatDateWithPattern } from './format';
+import { formatCalendarDateWithPattern, formatDateWithPattern } from './format';
 import type { DateFormatOption, UserSettings } from '../api/types';
 
 interface SettingsContextValue {
@@ -9,7 +9,10 @@ interface SettingsContextValue {
   isLoading: boolean;
   // Render an ISO timestamp using the user's preferred date format.
   // Falls back to yyyy-MM-dd while settings are still loading so the UI never flashes raw ISO.
+  // Use formatDate for real moments (notes, status events, enrichment timestamps).
+  // Use formatCalendarDate for date-only fields the user typed (appliedAt, deadline).
   formatDate: (iso: string | null | undefined) => string;
+  formatCalendarDate: (iso: string | null | undefined) => string;
   setDateFormat: (fmt: DateFormatOption) => Promise<void>;
   setContactEmail: (email: string) => Promise<void>;
   recordTags: (tags: string[]) => Promise<void>;
@@ -25,6 +28,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const formatDate = useCallback(
     (iso: string | null | undefined) => formatDateWithPattern(iso, pattern),
+    [pattern],
+  );
+
+  const formatCalendarDate = useCallback(
+    (iso: string | null | undefined) => formatCalendarDateWithPattern(iso, pattern),
     [pattern],
   );
 
@@ -61,8 +69,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<SettingsContextValue>(
-    () => ({ settings: data, isLoading, formatDate, setDateFormat, setContactEmail, recordTags }),
-    [data, isLoading, formatDate, setDateFormat, setContactEmail, recordTags],
+    () => ({
+      settings: data,
+      isLoading,
+      formatDate,
+      formatCalendarDate,
+      setDateFormat,
+      setContactEmail,
+      recordTags,
+    }),
+    [data, isLoading, formatDate, formatCalendarDate, setDateFormat, setContactEmail, recordTags],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

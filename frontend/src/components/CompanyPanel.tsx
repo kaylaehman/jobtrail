@@ -213,6 +213,19 @@ function CompanyFooter({
           </button>
         </div>
       )}
+      {matchStatus === 'confirmed' && (
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-slate-400">Verified — match locked in for re-imports.</span>
+          <button
+            type="button"
+            className="text-slate-400 underline hover:text-slate-200"
+            onClick={() => updateJob.mutate({ companyMatchStatus: 'auto' })}
+            title="Drop verification — match returns to the auto state"
+          >
+            ↩ Unverify
+          </button>
+        </div>
+      )}
     </div>
   );
 }

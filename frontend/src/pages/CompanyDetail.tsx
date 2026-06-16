@@ -13,7 +13,7 @@ export function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: company, isLoading } = useCompany(id);
   const refresh = useRefreshCompany();
-  const { formatDate } = useAppSettings();
+  const { formatDate, formatCalendarDate } = useAppSettings();
   const { data: jobs } = useJobs(id ? { companyId: id } : {});
 
   if (isLoading || !company) return <div className="text-slate-400">Loading…</div>;
@@ -101,7 +101,7 @@ export function CompanyDetail() {
                   <div className="flex flex-col">
                     <span className="font-medium">{j.position}</span>
                     <span className="text-xs text-slate-400">
-                      {j.appliedAt ? `Applied ${formatDate(j.appliedAt)}` : 'Not applied yet'}
+                      {j.appliedAt ? `Applied ${formatCalendarDate(j.appliedAt)}` : 'Not applied yet'}
                     </span>
                   </div>
                   <StatusPill status={j.status} />
