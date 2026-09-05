@@ -121,18 +121,29 @@ def search(req: SearchRequest):
         logger.info("cache hit: %s", key)
         return SearchResponse(cached=True, **_cache[key])
 
+    sites = [
+        "zip_recruiter" if site == "ziprecruiter" else site
+        for site in req.site_name
+    ]
+
     try:
-        df = scrape_jobs(
-            site_name=req.site_name,
-            search_term=req.search_term,
-            location=req.location,
-            results_wanted=req.results_wanted,
-            offset=req.offset,
-            hours_old=req.hours_old,
-            is_remote=req.is_remote,
-            job_type=req.job_type,
-            proxies=PROXIES,
-        )
+        kwargs = {
+            "site_name": sites,
+            "search_term": req.search_term,
+            "results_wanted": req.results_wanted,
+            "offset": req.offset,
+            "proxies": PROXIES,
+        }
+        if req.location is not None:
+            kwargs["location"] = req.location
+        if req.hours_old is not None:
+            kwargs["hours_old"] = req.hours_old
+        if req.is_remote is not None:
+            kwargs["is_remote"] = req.is_remote
+        if req.job_type is not None:
+            kwargs["job_type"] = req.job_type
+
+        df = scrape_jobs(**kwargs)
     except Exception as exc:  # noqa: BLE001
         logger.exception("scrape_jobs failed")
         raise HTTPException(status_code=502, detail=f"jobspy error: {exc}") from exc
